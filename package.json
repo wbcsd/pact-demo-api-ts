@@ -1,0 +1,25 @@
+{
+  "name": "pact-demo-api-ts",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node dist/app.js",
+    "dev": "nodemon src/app.ts",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/jsonwebtoken": "^9.0.8",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
