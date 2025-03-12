@@ -19,6 +19,7 @@ export const authenticateJWT = (
 
       next();
     } catch (err) {
+      console.log(err);
       res.sendStatus(401);
     }
   } else {
