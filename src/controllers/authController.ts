@@ -22,6 +22,14 @@ export const getToken = (req: Request, res: Response) => {
     return;
   }
 
+  if (
+    client_id !== "test_client_id" ||
+    client_secret !== "test_client_secret"
+  ) {
+    res.status(401).json({ error: "Invalid credentials" });
+    return;
+  }
+
   const tokenPayload = { client_id };
   const secret = process.env.JWT_VERIFY_SECRET || "default_secret";
 

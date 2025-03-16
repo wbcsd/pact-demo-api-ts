@@ -1,73 +1,5 @@
 import { Request, Response } from "express";
-import { ProductFootprint } from "../models/productFootprint";
-
-// Mock data for demonstration
-const footprints: ProductFootprint[] = [
-  {
-    id: "1",
-    specVersion: "2.0.0",
-    version: 1,
-    created: new Date().toISOString(),
-    status: "Active",
-    companyName: "Example Company",
-    companyIds: ["urn:example:company:1"],
-    productDescription: "Example Product",
-    productIds: ["urn:example:product:1"],
-    productCategoryCpc: "1234",
-    productNameCompany: "Example Product Name",
-    comment: "No comments",
-    pcf: {
-      declaredUnit: "kilogram",
-      unitaryProductAmount: "1",
-      pCfExcludingBiogenic: "10.5",
-      fossilGhgEmissions: "10.5",
-      fossilCarbonContent: "5.2",
-      biogenicCarbonContent: "0",
-      characterizationFactors: "AR5",
-      ipccCharacterizationFactorsSources: ["AR5"],
-      crossSectoralStandardsUsed: ["GHG Protocol Product standard"],
-      productOrSectorSpecificRules: [],
-      boundaryProcessesDescription: "Description of boundary processes",
-      referencePeriodStart: new Date().toISOString(),
-      referencePeriodEnd: new Date().toISOString(),
-      exemptedEmissionsPercent: 0.5,
-      exemptedEmissionsDescription: "Minimal emissions exempted",
-      packagingEmissionsIncluded: false,
-    },
-  },
-  {
-    id: "1",
-    specVersion: "2.0.0",
-    version: 1,
-    created: new Date("1981-12-11T00:00:00Z").toISOString(),
-    status: "Active",
-    companyName: "Example Company",
-    companyIds: ["urn:example:company:1"],
-    productDescription: "Example Product",
-    productIds: ["urn:example:product:2"],
-    productCategoryCpc: "1234",
-    productNameCompany: "Example Product Name",
-    comment: "No comments",
-    pcf: {
-      declaredUnit: "kilogram",
-      unitaryProductAmount: "1",
-      pCfExcludingBiogenic: "10.5",
-      fossilGhgEmissions: "10.5",
-      fossilCarbonContent: "5.2",
-      biogenicCarbonContent: "0",
-      characterizationFactors: "AR5",
-      ipccCharacterizationFactorsSources: ["AR5"],
-      crossSectoralStandardsUsed: ["GHG Protocol Product standard"],
-      productOrSectorSpecificRules: [],
-      boundaryProcessesDescription: "Description of boundary processes",
-      referencePeriodStart: new Date().toISOString(),
-      referencePeriodEnd: new Date().toISOString(),
-      exemptedEmissionsPercent: 0.5,
-      exemptedEmissionsDescription: "Minimal emissions exempted",
-      packagingEmissionsIncluded: false,
-    },
-  },
-];
+import { footprints } from "../utils/footprints";
 
 // Controller to fetch a single footprint by ID
 export const getFootprintById = (req: Request, res: Response) => {
@@ -78,7 +10,7 @@ export const getFootprintById = (req: Request, res: Response) => {
     res.status(200).json({ data: footprint });
   } else {
     res.status(404).json({
-      code: "NotFound",
+      code: "NoSuchFootprint",
       message: `Footprint with id ${id} not found.`,
     });
   }
@@ -86,24 +18,64 @@ export const getFootprintById = (req: Request, res: Response) => {
 
 // Controller to fetch all footprints with optional filtering and pagination
 export const getFootprints = (req: Request, res: Response) => {
-  const { limit, $filter } = req.query;
+  const { limit, page, $filter } = req.query;
   let filteredFootprints = [...footprints];
 
-  // Example basic filtering logic
-  /* console.log($filter);
-  if ($filter && typeof $filter === "string") {
-    filteredFootprints = filteredFootprints.filter((fp) =>
-      fp.companyName.toLowerCase().includes($filter.toLowerCase())
-    );
-  } */
+  // (Optional filtering logic can be added here)
 
-  // Apply limit
-  if (limit && typeof limit === "string") {
-    const parsedLimit = parseInt(limit, 10);
-    if (!isNaN(parsedLimit) && parsedLimit > 0) {
-      filteredFootprints = filteredFootprints.slice(0, parsedLimit);
-    }
-  }
+  // Total count before pagination
+  const totalCount = filteredFootprints.length;
 
-  res.status(200).json({ data: filteredFootprints });
+  // Determine limit and page values (defaults: limit = totalCount, page = 1)
+  const limitVal =
+    limit && typeof limit === "string" ? parseInt(limit, 10) : totalCount;
+  const pageVal = page && typeof page === "string" ? parseInt(page, 10) : 1;
+
+  // Calculate offset and slice the array
+  const offset = (pageVal - 1) * limitVal;
+  const pagedFootprints = filteredFootprints.slice(offset, offset + limitVal);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalCount / limitVal);
+
+  // Build pagination Link header
+  // TODO get the base URL from an env variable because the infra setup with api gateway > alb > ecs fargate
+  const baseUrl = `https://ie8onambsh.execute-api.eu-north-1.amazonaws.com/prod/2/footprints`;
+  const links: string[] = getLinksFoHeader(
+    baseUrl,
+    limitVal,
+    pageVal,
+    totalPages
+  );
+
+  res.setHeader("Link", links.join(", "));
+
+  res.status(200).json({ data: pagedFootprints });
 };
+
+function getLinksFoHeader(
+  baseUrl: string,
+  limitVal: number,
+  pageVal: number,
+  totalPages: number
+) {
+  const links: string[] = [];
+
+  // First page
+  links.push(`<${baseUrl}?page=1&limit=${limitVal}>; rel="first"`);
+  // Previous page
+  if (pageVal > 1) {
+    links.push(
+      `<${baseUrl}?page=${pageVal - 1}&limit=${limitVal}>; rel="prev"`
+    );
+  }
+  // Next page
+  if (pageVal < totalPages) {
+    links.push(
+      `<${baseUrl}?page=${pageVal + 1}&limit=${limitVal}>; rel="next"`
+    );
+  }
+  // Last page
+  links.push(`<${baseUrl}?page=${totalPages}&limit=${limitVal}>; rel="last"`);
+  return links;
+}

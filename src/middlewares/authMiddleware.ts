@@ -20,9 +20,9 @@ export const authenticateJWT = (
       next();
     } catch (err) {
       console.log(err);
-      res.sendStatus(401);
+      res.status(400).json({ code: "BadRequest" });
     }
   } else {
-    res.sendStatus(401);
+    res.status(400).json({ code: "BadRequest" });
   }
 };

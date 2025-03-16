@@ -51,6 +51,7 @@ export interface CarbonFootprint {
   primaryDataShare?: number;
   dqi?: DataQualityIndicators;
   assurance?: Assurance;
+  geographyRegionOrSubregion: string;
 }
 
 export interface DataModelExtension {

@@ -27,10 +27,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
       },
     };
 
-    console.log(
-      `Sending response to ${source}:`,
-      JSON.stringify(responsePayload, null, 2)
-    );
+    const token = await getAccessToken(source);
 
     // Send the POST request to the source URL
     // TODO authenticate the request to the source. In our case it will use the testing tool's api credentials
@@ -38,6 +35,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(responsePayload),
     });
@@ -70,3 +68,28 @@ export const handleWebhook = async (req: Request, res: Response) => {
     return;
   }
 };
+
+async function getAccessToken(source: any) {
+  const sourceUrl = new URL(source);
+  sourceUrl.search = "";
+  const cleanSource = sourceUrl.toString();
+  const baseSourceUrl = cleanSource.replace("/2/events", "");
+  const authUrl = `${baseSourceUrl}/auth/token`;
+
+  const clientId = "test_client_id";
+  const clientSecret = "test_client_secret";
+
+  // Get the auth token from the source, use basic auth
+  const authResponse = await fetch(authUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Basic ${Buffer.from(
+        `${clientId}:${clientSecret}`
+      ).toString("base64")}`,
+    },
+  });
+
+  const token = (await authResponse.json()).token;
+  return token;
+}

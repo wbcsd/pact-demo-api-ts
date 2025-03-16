@@ -1,0 +1,475 @@
+import { ProductFootprint } from "../models/productFootprint";
+
+// Mock data for demonstration
+export const footprints: ProductFootprint[] = [
+  {
+    id: "b1f8c0d2-7c4e-4e67-9a9c-2e4c12345678",
+    specVersion: "2.0.0",
+    version: 1,
+    created: "2023-01-15T10:15:30Z",
+    status: "Active",
+    validityPeriodStart: "2023-01-15T10:15:30Z",
+    validityPeriodEnd: "2025-12-31T00:00:00Z",
+    companyName: "Acme Corp",
+    companyIds: [
+      "urn:uuid:abc12345-6789-4def-0123-456789abcdef",
+      "urn:epc:id:sgln:123456.00000.1",
+    ],
+    productDescription:
+      "Renewable Diesel, soybean feedstock (bulk - no packaging)",
+    productIds: ["urn:gtin:1234567890123"],
+    productCategoryCpc: "6398",
+    productNameCompany: "Green Ethanol",
+    comment: "",
+    pcf: {
+      declaredUnit: "liter",
+      unitaryProductAmount: "1",
+      pCfExcludingBiogenic: "1.75",
+      pCfIncludingBiogenic: "1.90",
+      fossilGhgEmissions: "1.55",
+      fossilCarbonContent: "0.05",
+      biogenicCarbonContent: "0.45",
+      dLucGhgEmissions: "0.85",
+      landManagementGhgEmissions: "0.65",
+      otherBiogenicGhgEmissions: "0.50",
+      iLucGhgEmissions: "0.10",
+      biogenicCarbonWithdrawal: "-1.40",
+      aircraftGhgEmissions: "0.25",
+      characterizationFactors: "AR6",
+      ipccCharacterizationFactorsSources: ["AR6"],
+      crossSectoralStandardsUsed: [
+        "GHG Protocol Product standard",
+        "ISO Standard 14067",
+      ],
+      productOrSectorSpecificRules: [
+        {
+          operator: "Other",
+          ruleNames: [
+            "The Product Carbon Footprint Guideline for the Chemical Industry, v.2.0",
+          ],
+          otherOperatorName: "Tfs",
+        },
+      ],
+      biogenicAccountingMethodology: "GHGP",
+      boundaryProcessesDescription:
+        "1) Sourcing soybean, 2) Processing for renewable diesel, 3) Distribution from refinery to depot",
+      referencePeriodStart: "2022-01-01T00:00:00Z",
+      referencePeriodEnd: "2023-01-01T00:00:00Z",
+      geographyRegionOrSubregion: "Americas",
+      secondaryEmissionFactorSources: [
+        {
+          name: "Ecoinvent",
+          version: "3.2",
+        },
+      ],
+      exemptedEmissionsPercent: 0,
+      exemptedEmissionsDescription: "",
+      packagingEmissionsIncluded: false,
+      allocationRulesDescription:
+        "Using mass allocation based on product-specific criteria.",
+      uncertaintyAssessmentDescription:
+        "Emissions estimates based on feedstock variability and process efficiency.",
+      primaryDataShare: 14.5,
+      dqi: {
+        coveragePercent: 80,
+        technologicalDQR: 1.5,
+        temporalDQR: 2.4,
+        geographicalDQR: 1.9,
+        completenessDQR: 1.8,
+        reliabilityDQR: 2.0,
+      },
+      assurance: {
+        assurance: false,
+        providerName: "",
+      },
+    },
+    extensions: [
+      {
+        specVersion: "2.0.0",
+        dataSchema:
+          "https://catalog.carbon-transparency.com/shipment/1.0.0/data-model.json",
+        data: {
+          shipmentId: "S9876543210",
+          consignmentId: "Cxyz.123-abc",
+          shipmentType: "PICKUP",
+          weight: 12,
+          transportChainElementId: "TRK001A",
+        },
+      },
+    ],
+  },
+  {
+    id: "9e7d4f50-2a0b-42c9-b9d3-7d81abc12345",
+    specVersion: "2.0.0",
+    version: 1,
+    created: "2022-11-20T14:25:10Z",
+    status: "Active",
+    validityPeriodStart: "2022-11-20T14:25:10Z",
+    validityPeriodEnd: "2024-06-30T00:00:00Z",
+    companyName: "Globex Corporation",
+    companyIds: [
+      "urn:uuid:def67890-1234-5abc-6789-abcdef012345",
+      "urn:epc:id:sgln:654321.00000.2",
+    ],
+    productDescription:
+      "Bio-Ethanol 95%, sugarcane feedstock (bulk - no packaging)",
+    productIds: ["urn:gtin:2345678901234"],
+    productCategoryCpc: "6420",
+    productNameCompany: "Solar Diesel",
+    comment: "",
+    pcf: {
+      declaredUnit: "liter",
+      unitaryProductAmount: "1",
+      pCfExcludingBiogenic: "1.80",
+      pCfIncludingBiogenic: "2.00",
+      fossilGhgEmissions: "1.60",
+      fossilCarbonContent: "0.00",
+      biogenicCarbonContent: "0.50",
+      dLucGhgEmissions: "0.90",
+      landManagementGhgEmissions: "0.70",
+      otherBiogenicGhgEmissions: "0.45",
+      iLucGhgEmissions: "0.05",
+      biogenicCarbonWithdrawal: "-1.30",
+      aircraftGhgEmissions: "0.30",
+      characterizationFactors: "AR5",
+      ipccCharacterizationFactorsSources: ["AR5"],
+      crossSectoralStandardsUsed: [
+        "GHG Protocol Product standard",
+        "ISO Standard 14067",
+      ],
+      productOrSectorSpecificRules: [
+        {
+          operator: "Other",
+          ruleNames: ["Custom Product Carbon Footprint Guideline, v.1.0"],
+          otherOperatorName: "XYZ",
+        },
+      ],
+      biogenicAccountingMethodology: "GHGP",
+      boundaryProcessesDescription:
+        "1) Sugarcane harvest, 2) Ethanol production, 3) Transport to blending facility",
+      referencePeriodStart: "2021-06-01T00:00:00Z",
+      referencePeriodEnd: "2022-06-01T00:00:00Z",
+      geographyRegionOrSubregion: "Americas",
+      secondaryEmissionFactorSources: [
+        {
+          name: "Ecoinvent",
+          version: "3.1",
+        },
+      ],
+      exemptedEmissionsPercent: 0,
+      exemptedEmissionsDescription: "",
+      packagingEmissionsIncluded: false,
+      allocationRulesDescription:
+        "Based on mass allocation following industry guidelines.",
+      uncertaintyAssessmentDescription:
+        "Variability in raw material quality introduces uncertainty.",
+      primaryDataShare: 13.2,
+      dqi: {
+        coveragePercent: 75,
+        technologicalDQR: 1.7,
+        temporalDQR: 2.7,
+        geographicalDQR: 1.6,
+        completenessDQR: 1.9,
+        reliabilityDQR: 2.2,
+      },
+      assurance: {
+        assurance: true,
+        providerName: "AssureCo",
+      },
+    },
+    extensions: [
+      {
+        specVersion: "2.0.0",
+        dataSchema:
+          "https://catalog.carbon-transparency.com/shipment/1.0.0/data-model.json",
+        data: {
+          shipmentId: "S1122334455",
+          consignmentId: "Cuvw.456-def",
+          shipmentType: "DELIVERY",
+          weight: 20,
+          transportChainElementId: "TRK002B",
+        },
+      },
+    ],
+  },
+  {
+    id: "3a5c7e8f-6d9b-4c0d-8a1e-0f123456789a",
+    specVersion: "2.0.0",
+    version: 1,
+    created: "2023-03-05T08:45:00Z",
+    status: "Active",
+    validityPeriodStart: "2023-03-05T08:45:00Z",
+    validityPeriodEnd: "2026-03-15T00:00:00Z",
+    companyName: "Initech",
+    companyIds: [
+      "urn:uuid:98765fed-cba9-8d76-5432-10fedcba9876",
+      "urn:epc:id:sgln:789012.00000.3",
+    ],
+    productDescription:
+      "Biodiesel, used cooking oil (recycled - containerized)",
+    productIds: ["urn:gtin:3456789012345"],
+    productCategoryCpc: "6301",
+    productNameCompany: "Eco Biodiesel",
+    comment: "",
+    pcf: {
+      declaredUnit: "liter",
+      unitaryProductAmount: "1",
+      pCfExcludingBiogenic: "2.05",
+      pCfIncludingBiogenic: "2.20",
+      fossilGhgEmissions: "1.70",
+      fossilCarbonContent: "0.02",
+      biogenicCarbonContent: "0.55",
+      dLucGhgEmissions: "1.00",
+      landManagementGhgEmissions: "0.80",
+      otherBiogenicGhgEmissions: "0.60",
+      iLucGhgEmissions: "0.15",
+      biogenicCarbonWithdrawal: "-1.20",
+      aircraftGhgEmissions: "0.35",
+      characterizationFactors: "AR6",
+      ipccCharacterizationFactorsSources: ["AR6"],
+      crossSectoralStandardsUsed: [
+        "GHG Protocol Product standard",
+        "ISO Standard 14067",
+      ],
+      productOrSectorSpecificRules: [
+        {
+          operator: "Other",
+          ruleNames: ["Advanced Carbon Footprint Methodology, v.3.0"],
+          otherOperatorName: "ABC",
+        },
+      ],
+      biogenicAccountingMethodology: "GHGP",
+      boundaryProcessesDescription:
+        "1) Collection of used cooking oil, 2) Biodiesel refining, 3) Distribution logistics",
+      referencePeriodStart: "2020-01-01T00:00:00Z",
+      referencePeriodEnd: "2021-01-01T00:00:00Z",
+      geographyRegionOrSubregion: "Western Europe",
+      secondaryEmissionFactorSources: [
+        {
+          name: "Ecoinvent",
+          version: "3.0",
+        },
+      ],
+      exemptedEmissionsPercent: 0,
+      exemptedEmissionsDescription: "",
+      packagingEmissionsIncluded: false,
+      allocationRulesDescription:
+        "Mass allocation as per latest industry standards.",
+      uncertaintyAssessmentDescription:
+        "Limited primary data increases uncertainty in the emission estimates.",
+      primaryDataShare: 15.0,
+      dqi: {
+        coveragePercent: 82,
+        technologicalDQR: 1.8,
+        temporalDQR: 2.5,
+        geographicalDQR: 1.7,
+        completenessDQR: 1.6,
+        reliabilityDQR: 2.3,
+      },
+      assurance: {
+        assurance: false,
+        providerName: "",
+      },
+    },
+    extensions: [
+      {
+        specVersion: "2.0.0",
+        dataSchema:
+          "https://catalog.carbon-transparency.com/shipment/1.0.0/data-model.json",
+        data: {
+          shipmentId: "S9988776655",
+          consignmentId: "Cklm.789-ghi",
+          shipmentType: "TRANSFER",
+          weight: 15,
+          transportChainElementId: "TRK003C",
+        },
+      },
+    ],
+  },
+  {
+    id: "d1234567-89ab-cdef-0123-456789abcdef",
+    specVersion: "2.0.0",
+    version: 1,
+    created: "2022-12-31T23:59:59Z",
+    status: "Active",
+    validityPeriodStart: "2022-12-31T23:59:59Z",
+    validityPeriodEnd: "2025-01-01T00:00:00Z",
+    companyName: "Umbrella Corp",
+    companyIds: [
+      "urn:uuid:11223344-5566-7788-99aa-bbccddeeff00",
+      "urn:epc:id:sgln:345678.00000.4",
+    ],
+    productDescription: "Biogas, organic waste (biodegradable - not packaged)",
+    productIds: ["urn:gtin:4567890123456"],
+    productCategoryCpc: "6455",
+    productNameCompany: "Organic Biogas",
+    comment: "",
+    pcf: {
+      declaredUnit: "liter",
+      unitaryProductAmount: "1",
+      pCfExcludingBiogenic: "1.95",
+      pCfIncludingBiogenic: "2.10",
+      fossilGhgEmissions: "1.50",
+      fossilCarbonContent: "0.03",
+      biogenicCarbonContent: "0.48",
+      dLucGhgEmissions: "0.88",
+      landManagementGhgEmissions: "0.68",
+      otherBiogenicGhgEmissions: "0.42",
+      iLucGhgEmissions: "0.08",
+      biogenicCarbonWithdrawal: "-1.35",
+      aircraftGhgEmissions: "0.22",
+      characterizationFactors: "AR5",
+      ipccCharacterizationFactorsSources: ["AR5"],
+      crossSectoralStandardsUsed: [
+        "GHG Protocol Product standard",
+        "ISO Standard 14067",
+      ],
+      productOrSectorSpecificRules: [
+        {
+          operator: "Other",
+          ruleNames: ["Sector-specific Emission Calculation, v.1.2"],
+          otherOperatorName: "DEF",
+        },
+      ],
+      biogenicAccountingMethodology: "GHGP",
+      boundaryProcessesDescription:
+        "1) Organic waste collection, 2) Biogas production, 3) Energy distribution",
+      referencePeriodStart: "2021-03-01T00:00:00Z",
+      referencePeriodEnd: "2022-03-01T00:00:00Z",
+      geographyRegionOrSubregion: "Eastern Europe",
+      secondaryEmissionFactorSources: [
+        {
+          name: "Ecoinvent",
+          version: "3.3",
+        },
+      ],
+      exemptedEmissionsPercent: 0,
+      exemptedEmissionsDescription: "",
+      packagingEmissionsIncluded: false,
+      allocationRulesDescription:
+        "Following mass allocation as per updated guidelines.",
+      uncertaintyAssessmentDescription:
+        "Calculation based on average performance data.",
+      primaryDataShare: 12.0,
+      dqi: {
+        coveragePercent: 77,
+        technologicalDQR: 1.4,
+        temporalDQR: 2.3,
+        geographicalDQR: 1.5,
+        completenessDQR: 1.7,
+        reliabilityDQR: 2.1,
+      },
+      assurance: {
+        assurance: true,
+        providerName: "CertiCheck",
+      },
+    },
+    extensions: [
+      {
+        specVersion: "2.0.0",
+        dataSchema:
+          "https://catalog.carbon-transparency.com/shipment/1.0.0/data-model.json",
+        data: {
+          shipmentId: "S5566778899",
+          consignmentId: "Cnop.012-jkl",
+          shipmentType: "RETURN",
+          weight: 8,
+          transportChainElementId: "TRK004D",
+        },
+      },
+    ],
+  },
+  {
+    id: "e0f1a2b3-c4d5-e6f7-8901-23456789abcd",
+    specVersion: "2.0.0",
+    version: 1,
+    created: "2023-02-10T12:00:00Z",
+    status: "Active",
+    validityPeriodStart: "2023-02-10T12:00:00Z",
+    validityPeriodEnd: "2024-11-30T00:00:00Z",
+    companyName: "Stark Industries",
+    companyIds: [
+      "urn:uuid:00ffeedd-ccbb-aacc-8877-665544332211",
+      "urn:epc:id:sgln:567890.00000.5",
+    ],
+    productDescription: "Hydrogen fuel, green production (bulk - no packaging)",
+    productIds: ["urn:gtin:5678901234567"],
+    productCategoryCpc: "6389",
+    productNameCompany: "Pure Hydrogen",
+    comment: "",
+    pcf: {
+      declaredUnit: "liter",
+      unitaryProductAmount: "1",
+      pCfExcludingBiogenic: "1.85",
+      pCfIncludingBiogenic: "2.05",
+      fossilGhgEmissions: "1.45",
+      fossilCarbonContent: "0.00",
+      biogenicCarbonContent: "0.50",
+      dLucGhgEmissions: "0.80",
+      landManagementGhgEmissions: "0.60",
+      otherBiogenicGhgEmissions: "0.40",
+      iLucGhgEmissions: "0.00",
+      biogenicCarbonWithdrawal: "-1.50",
+      aircraftGhgEmissions: "0.20",
+      characterizationFactors: "AR6",
+      ipccCharacterizationFactorsSources: ["AR6"],
+      crossSectoralStandardsUsed: [
+        "GHG Protocol Product standard",
+        "ISO Standard 14067",
+      ],
+      productOrSectorSpecificRules: [
+        {
+          operator: "Other",
+          ruleNames: ["Hydrogen Fuel Emission Guidelines, v.1.5"],
+          otherOperatorName: "GHX",
+        },
+      ],
+      biogenicAccountingMethodology: "GHGP",
+      boundaryProcessesDescription:
+        "1) Electrolysis of water, 2) Fuel processing, 3) Storage and distribution",
+      referencePeriodStart: "2022-05-01T00:00:00Z",
+      referencePeriodEnd: "2023-05-01T00:00:00Z",
+      geographyRegionOrSubregion: "Asia",
+      secondaryEmissionFactorSources: [
+        {
+          name: "Ecoinvent",
+          version: "3.4",
+        },
+      ],
+      exemptedEmissionsPercent: 0,
+      exemptedEmissionsDescription: "",
+      packagingEmissionsIncluded: false,
+      allocationRulesDescription:
+        "Based on standard mass allocation procedures.",
+      uncertaintyAssessmentDescription:
+        "Estimates are subject to minor uncertainties due to process variations.",
+      primaryDataShare: 13.7,
+      dqi: {
+        coveragePercent: 79,
+        technologicalDQR: 1.9,
+        temporalDQR: 2.8,
+        geographicalDQR: 1.6,
+        completenessDQR: 1.5,
+        reliabilityDQR: 2.4,
+      },
+      assurance: {
+        assurance: false,
+        providerName: "",
+      },
+    },
+    extensions: [
+      {
+        specVersion: "2.0.0",
+        dataSchema:
+          "https://catalog.carbon-transparency.com/shipment/1.0.0/data-model.json",
+        data: {
+          shipmentId: "S4433221100",
+          consignmentId: "Cqrs.345-mno",
+          shipmentType: "DELIVERY",
+          weight: 25,
+          transportChainElementId: "TRK005E",
+        },
+      },
+    ],
+  },
+];
