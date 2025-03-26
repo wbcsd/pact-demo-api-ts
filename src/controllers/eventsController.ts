@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { randomUUID } from "crypto";
+import { footprints } from "../utils/footprints";
 
 export const handleWebhook = async (req: Request, res: Response) => {
   try {
@@ -17,20 +18,19 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
     // Prepare the response payload
     const responsePayload = {
-      type: "org.wbcsd.pathfinder.ProductFootprint.Published.v1",
+      type: "org.wbcsd.pathfinder.ProductFootprintRequest.Fulfilled.v1",
       specversion: "1.0",
       id: randomUUID(),
       source: `//EventHostname/EventSubpath`,
       time: new Date().toISOString(),
       data: {
-        pfIds: data.pf?.productIds || [],
+        requestEventId: req.body.id,
+        pfs: [footprints[0]],
       },
     };
 
     const token = await getAccessToken(source);
 
-    // Send the POST request to the source URL
-    // TODO authenticate the request to the source. In our case it will use the testing tool's api credentials
     const response = await fetch(source, {
       method: "POST",
       headers: {
