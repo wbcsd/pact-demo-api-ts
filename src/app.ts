@@ -6,7 +6,11 @@ import webhookRoutes from "./routes/eventsRoutes";
 const app = express();
 
 // Middleware for parsing JSON
-app.use(express.json());
+app.use(
+  express.json({
+    type: ["application/json", "application/cloudevents+json"],
+  })
+);
 
 // Define routes
 app.use("/2/footprints", footprintRoutes);

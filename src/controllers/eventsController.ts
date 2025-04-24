@@ -51,14 +51,11 @@ export const handleWebhook = async (req: Request, res: Response) => {
       return;
     }
 
-    const responseData = await response.json();
+    const responseData = await response.text();
     console.log("Response from destination:", responseData);
 
     // Return success response
-    res.status(200).json({
-      message: "Webhook processed successfully",
-      forwardedTo: source,
-    });
+    res.status(200).send();
   } catch (error) {
     console.error("Error processing webhook:", error);
     res.status(500).json({
@@ -83,13 +80,13 @@ async function getAccessToken(source: any) {
   const authResponse = await fetch(authUrl, {
     method: "POST",
     headers: {
-      "Content-Type": "application/json",
+      "Content-Type": "application/x-www-form-urlencoded",
       Authorization: `Basic ${Buffer.from(
         `${clientId}:${clientSecret}`
       ).toString("base64")}`,
     },
   });
 
-  const token = (await authResponse.json()).token;
+  const token = (await authResponse.json()).access_token;
   return token;
 }

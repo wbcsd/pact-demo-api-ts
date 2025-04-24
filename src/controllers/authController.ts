@@ -33,6 +33,6 @@ export const getToken = (req: Request, res: Response) => {
   const tokenPayload = { client_id };
   const secret = process.env.JWT_VERIFY_SECRET || "default_secret";
 
-  const token = jwt.sign(tokenPayload, secret, { expiresIn: "1h" });
-  res.status(200).json({ token });
+  const access_token = jwt.sign(tokenPayload, secret, { expiresIn: "1h" });
+  res.status(200).json({ access_token });
 };
