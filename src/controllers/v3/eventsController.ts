@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { randomUUID } from "crypto";
-import { footprints } from "../utils/footprints";
+import { footprintsV3 } from "../../utils/footprints";
+import { getAccessToken } from "../../utils/auth";
 
 export const handleWebhook = async (req: Request, res: Response) => {
   try {
@@ -16,16 +17,16 @@ export const handleWebhook = async (req: Request, res: Response) => {
       return;
     }
 
-    // Prepare the response payload
+    // Prepare the response payload using v3 event format
     const responsePayload = {
-      type: "org.wbcsd.pathfinder.ProductFootprintRequest.Fulfilled.v1",
+      type: "org.wbcsd.pact.ProductFootprint.RequestFulfilledEvent.3",
       specversion: "1.0",
       id: randomUUID(),
       source: `//EventHostname/EventSubpath`,
       time: new Date().toISOString(),
       data: {
         requestEventId: req.body.id,
-        pfs: [footprints[0]],
+        pfs: [footprintsV3[0]], // Use v3 footprint data
       },
     };
 
@@ -65,28 +66,3 @@ export const handleWebhook = async (req: Request, res: Response) => {
     return;
   }
 };
-
-async function getAccessToken(source: any) {
-  const sourceUrl = new URL(source);
-  sourceUrl.search = "";
-  const cleanSource = sourceUrl.toString();
-  const baseSourceUrl = cleanSource.replace("/2/events", "");
-  const authUrl = `${baseSourceUrl}/auth/token`;
-
-  const clientId = "test_client_id";
-  const clientSecret = "test_client_secret";
-
-  // Get the auth token from the source, use basic auth
-  const authResponse = await fetch(authUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-      Authorization: `Basic ${Buffer.from(
-        `${clientId}:${clientSecret}`
-      ).toString("base64")}`,
-    },
-  });
-
-  const token = (await authResponse.json()).access_token;
-  return token;
-}

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { footprints } from "../utils/footprints";
+import { footprints } from "../../utils/footprints";
 
 // Controller to fetch a single footprint by ID
 export const getFootprintById = (req: Request, res: Response) => {

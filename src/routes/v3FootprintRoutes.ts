@@ -2,7 +2,7 @@ import express from "express";
 import {
   getFootprints,
   getFootprintById,
-} from "../controllers/v2/footprintController";
+} from "../controllers/v3/footprintController";
 import { authenticateJWT } from "../middlewares/authMiddleware";
 
 const router = express.Router();

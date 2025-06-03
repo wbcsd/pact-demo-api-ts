@@ -1,7 +1,9 @@
 import express from "express";
 import footprintRoutes from "./routes/footprintRoutes";
+import v3FootprintRoutes from "./routes/v3FootprintRoutes";
 import authRoutes from "./routes/authRoutes";
 import webhookRoutes from "./routes/eventsRoutes";
+import v3EventsRoutes from "./routes/v3EventsRoutes";
 
 const app = express();
 
@@ -15,6 +17,10 @@ app.use(
 // Define routes
 app.use("/2/footprints", footprintRoutes);
 app.use("/2/events", webhookRoutes);
+
+app.use("/3/footprints", v3FootprintRoutes);
+app.use("/3/events", v3EventsRoutes);
+
 app.use("/auth", authRoutes);
 
 // Health endpoint
