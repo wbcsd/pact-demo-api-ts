@@ -478,7 +478,7 @@ export const footprints: ProductFootprint[] = [
 // Mock data for ProductFootprintV3 (version 3.0 schema)
 export const footprintsV3: ProductFootprintV3[] = [
   {
-    id: "v3-b1f8c0d2-7c4e-4e67-9a9c-2e4c12345678",
+    id: "b1f8c0d2-7c4e-4e67-9a9c-2e4c12345678",
     specVersion: "3.0.0",
     created: "2023-01-15T10:15:30Z",
     status: "Active",
@@ -582,7 +582,7 @@ export const footprintsV3: ProductFootprintV3[] = [
     ],
   },
   {
-    id: "v3-9e7d4f50-2a0b-42c9-b9d3-7d81abc12345",
+    id: "9e7d4f50-2a0b-42c9-b9d3-7d81abc12345",
     specVersion: "3.0.0",
     created: "2022-11-20T14:25:10Z",
     status: "Active",
@@ -685,7 +685,7 @@ export const footprintsV3: ProductFootprintV3[] = [
     ],
   },
   {
-    id: "v3-3a5c7e8f-6d9b-4c0d-8a1e-0f123456789a",
+    id: "3a5c7e8f-6d9b-4c0d-8a1e-0f123456789a",
     specVersion: "3.0.0",
     created: "2023-03-05T08:45:00Z",
     status: "Active",
