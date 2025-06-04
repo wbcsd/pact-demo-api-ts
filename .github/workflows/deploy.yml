@@ -54,6 +54,14 @@ jobs:
           terraform plan -detailed-exitcode \
             -var="jwt_verify_secret=${{ secrets.JWT_VERIFY_SECRET }}"
 
+      - name: Terraform Apply
+        working-directory: infra
+        run: |
+          terraform apply -auto-approve \
+           -var="jwt_verify_secret=${{ secrets.JWT_VERIFY_SECRET }}"
+        env:
+          TF_IN_AUTOMATION: true
+
   # terraform-apply:
   #   name: Terraform Apply
   #   runs-on: ubuntu-latest
