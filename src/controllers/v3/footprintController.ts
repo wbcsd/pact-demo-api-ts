@@ -18,7 +18,7 @@ export const getFootprintById = (req: Request, res: Response) => {
 
 // Controller to fetch all footprints with optional filtering and pagination
 export const getFootprints = (req: Request, res: Response) => {
-  const { limit, page, $filter } = req.query;
+  const { limit, offset } = req.query;
   let filteredFootprints = [...footprintsV3];
 
   // (Optional filtering logic can be added here)
@@ -26,17 +26,17 @@ export const getFootprints = (req: Request, res: Response) => {
   // Total count before pagination
   const totalCount = filteredFootprints.length;
 
-  // Determine limit and page values (defaults: limit = totalCount, page = 1)
+  // Determine limit and offset values (defaults: limit = totalCount, offset = 0)
   const limitVal =
     limit && typeof limit === "string" ? parseInt(limit, 10) : totalCount;
-  const pageVal = page && typeof page === "string" ? parseInt(page, 10) : 1;
+  const offsetVal =
+    offset && typeof offset === "string" ? parseInt(offset, 10) : 0;
 
-  // Calculate offset and slice the array
-  const offset = (pageVal - 1) * limitVal;
-  const pagedFootprints = filteredFootprints.slice(offset, offset + limitVal);
-
-  // Calculate total pages
-  const totalPages = Math.ceil(totalCount / limitVal);
+  // Slice the array using offset and limit
+  const pagedFootprints = filteredFootprints.slice(
+    offsetVal,
+    offsetVal + limitVal
+  );
 
   // Build pagination Link header
   // TODO get the base URL from an env variable because the infra setup with api gateway > alb > ecs fargate
@@ -44,8 +44,8 @@ export const getFootprints = (req: Request, res: Response) => {
   const links: string[] = getLinksFoHeader(
     baseUrl,
     limitVal,
-    pageVal,
-    totalPages
+    offsetVal,
+    totalCount
   );
 
   res.setHeader("Link", links.join(", "));
@@ -56,26 +56,32 @@ export const getFootprints = (req: Request, res: Response) => {
 function getLinksFoHeader(
   baseUrl: string,
   limitVal: number,
-  pageVal: number,
-  totalPages: number
+  offsetVal: number,
+  totalCount: number
 ) {
   const links: string[] = [];
 
-  // First page
-  links.push(`<${baseUrl}?page=1&limit=${limitVal}>; rel="first"`);
+  // First page (offset = 0)
+  links.push(`<${baseUrl}?offset=0&limit=${limitVal}>; rel="first"`);
+
   // Previous page
-  if (pageVal > 1) {
+  if (offsetVal > 0) {
+    const prevOffset = Math.max(0, offsetVal - limitVal);
     links.push(
-      `<${baseUrl}?page=${pageVal - 1}&limit=${limitVal}>; rel="prev"`
+      `<${baseUrl}?offset=${prevOffset}&limit=${limitVal}>; rel="prev"`
     );
   }
+
   // Next page
-  if (pageVal < totalPages) {
+  if (offsetVal + limitVal < totalCount) {
+    const nextOffset = offsetVal + limitVal;
     links.push(
-      `<${baseUrl}?page=${pageVal + 1}&limit=${limitVal}>; rel="next"`
+      `<${baseUrl}?offset=${nextOffset}&limit=${limitVal}>; rel="next"`
     );
   }
+
   // Last page
-  links.push(`<${baseUrl}?page=${totalPages}&limit=${limitVal}>; rel="last"`);
+  const lastOffset = Math.max(0, totalCount - limitVal);
+  links.push(`<${baseUrl}?offset=${lastOffset}&limit=${limitVal}>; rel="last"`);
   return links;
 }
