@@ -32,7 +32,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
     const token = await getAccessToken(source);
 
-    const response = await fetch(source, {
+    const response = await fetch(`${source}/3/events`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

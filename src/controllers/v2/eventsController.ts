@@ -20,7 +20,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
     // Prepare the response payload
     const responsePayload = {
       type: "org.wbcsd.pathfinder.ProductFootprintRequest.Fulfilled.v1",
-      specversion: "1.0",
+      specversion,
       id: randomUUID(),
       source: `//EventHostname/EventSubpath`,
       time: new Date().toISOString(),
@@ -32,7 +32,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
 
     const token = await getAccessToken(source);
 
-    const response = await fetch(source, {
+    const response = await fetch(`${source}/2/events`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
