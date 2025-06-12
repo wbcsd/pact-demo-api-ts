@@ -19,10 +19,40 @@ export const getFootprintById = (req: Request, res: Response) => {
 
 // Controller to fetch all footprints with optional filtering and pagination
 export const getFootprints = (req: Request, res: Response) => {
-  const { limit, offset } = req.query;
+  const { limit, offset, productId, companyId, geography } = req.query;
   let filteredFootprints = [...footprintsV3];
 
-  // (Optional filtering logic can be added here)
+  // Filter by productId if provided (can be string or array of strings)
+  if (productId) {
+    const productIds = Array.isArray(productId) ? productId : [productId];
+    filteredFootprints = filteredFootprints.filter((footprint) =>
+      productIds.some(
+        (id) => typeof id === "string" && footprint.productIds.includes(id)
+      )
+    );
+  }
+
+  // Filter by companyId if provided (can be string or array of strings)
+  if (companyId) {
+    const companyIds = Array.isArray(companyId) ? companyId : [companyId];
+    filteredFootprints = filteredFootprints.filter((footprint) =>
+      companyIds.some(
+        (id) => typeof id === "string" && footprint.companyIds.includes(id)
+      )
+    );
+  }
+
+  // Filter by geography if provided (can be string or array of strings)
+  if (geography) {
+    const geographies = Array.isArray(geography) ? geography : [geography];
+    filteredFootprints = filteredFootprints.filter((footprint) =>
+      geographies.some(
+        (geo) =>
+          typeof geo === "string" &&
+          footprint.pcf.geographyRegionOrSubregion === geo
+      )
+    );
+  }
 
   // Total count before pagination
   const totalCount = filteredFootprints.length;
