@@ -11,7 +11,7 @@ export const getFootprintById = (req: Request, res: Response) => {
     res.status(200).json({ data: footprint });
   } else {
     res.status(404).json({
-      code: "NoSuchFootprint",
+      code: "NotFound",
       message: `Footprint with id ${id} not found.`,
     });
   }
