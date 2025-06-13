@@ -19,7 +19,18 @@ export const getFootprintById = (req: Request, res: Response) => {
 
 // Controller to fetch all footprints with optional filtering and pagination
 export const getFootprints = (req: Request, res: Response) => {
-  const { limit, offset, productId, companyId, geography } = req.query;
+  const {
+    limit,
+    offset,
+    productId,
+    companyId,
+    geography,
+    classification,
+    validOn,
+    validAfter,
+    validBefore,
+    status,
+  } = req.query;
   let filteredFootprints = [...footprintsV3];
 
   // Filter by productId if provided (can be string or array of strings)
@@ -51,6 +62,88 @@ export const getFootprints = (req: Request, res: Response) => {
           typeof geo === "string" &&
           footprint.pcf.geographyRegionOrSubregion === geo
       )
+    );
+  }
+
+  // Filter by classification if provided (can be string or array of strings)
+  if (classification) {
+    const classifications = Array.isArray(classification)
+      ? classification
+      : [classification];
+    filteredFootprints = filteredFootprints.filter((footprint) =>
+      classifications.some(
+        (classif) =>
+          typeof classif === "string" &&
+          footprint.productClassifications.includes(classif)
+      )
+    );
+  }
+
+  // Filter by validOn if provided (single date string)
+  if (validOn && typeof validOn === "string") {
+    const validOnDate = new Date(validOn);
+
+    // Check if the provided date is valid
+    if (!isNaN(validOnDate.getTime())) {
+      filteredFootprints = filteredFootprints.filter((footprint) => {
+        // Skip footprints without validity period
+        if (!footprint.validityPeriodStart || !footprint.validityPeriodEnd) {
+          return false;
+        }
+
+        const startDate = new Date(footprint.validityPeriodStart);
+        const endDate = new Date(footprint.validityPeriodEnd);
+
+        // Check if validOn date falls within the validity period
+        return validOnDate >= startDate && validOnDate <= endDate;
+      });
+    }
+  }
+
+  // Filter by validAfter if provided (single date string)
+  if (validAfter && typeof validAfter === "string") {
+    const validAfterDate = new Date(validAfter);
+
+    // Check if the provided date is valid
+    if (!isNaN(validAfterDate.getTime())) {
+      filteredFootprints = filteredFootprints.filter((footprint) => {
+        // Skip footprints without validityPeriodStart
+        if (!footprint.validityPeriodStart) {
+          return false;
+        }
+
+        const startDate = new Date(footprint.validityPeriodStart);
+
+        // Check if validityPeriodStart > validAfter
+        return startDate > validAfterDate;
+      });
+    }
+  }
+
+  // Filter by validBefore if provided (single date string)
+  if (validBefore && typeof validBefore === "string") {
+    const validBeforeDate = new Date(validBefore);
+
+    // Check if the provided date is valid
+    if (!isNaN(validBeforeDate.getTime())) {
+      filteredFootprints = filteredFootprints.filter((footprint) => {
+        // Skip footprints without validityPeriodEnd
+        if (!footprint.validityPeriodEnd) {
+          return false;
+        }
+
+        const endDate = new Date(footprint.validityPeriodEnd);
+
+        // Check if validityPeriodEnd < validBefore
+        return endDate < validBeforeDate;
+      });
+    }
+  }
+
+  // Filter by status if provided (single string only)
+  if (status && typeof status === "string") {
+    filteredFootprints = filteredFootprints.filter(
+      (footprint) => footprint.status === status
     );
   }
 
