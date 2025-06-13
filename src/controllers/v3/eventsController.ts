@@ -3,6 +3,9 @@ import { randomUUID } from "crypto";
 import { footprintsV3 } from "../../utils/footprints";
 import { getAccessToken } from "../../utils/auth";
 
+const REQUEST_FULFILLED_EVENT_TYPE =
+  "org.wbcsd.pact.ProductFootprint.RequestFulfilledEvent.3";
+
 export const handleWebhook = async (req: Request, res: Response) => {
   try {
     // Log the incoming request body
@@ -17,16 +20,22 @@ export const handleWebhook = async (req: Request, res: Response) => {
       return;
     }
 
+    // If the event type is RequestFulfilledEvent, return 200 immediately
+    if (type === REQUEST_FULFILLED_EVENT_TYPE) {
+      res.status(200).send();
+      return;
+    }
+
     // Prepare the response payload using v3 event format
     const responsePayload = {
-      type: "org.wbcsd.pact.ProductFootprint.RequestFulfilledEvent.3",
+      type: REQUEST_FULFILLED_EVENT_TYPE,
       specversion: "1.0",
       id: randomUUID(),
       source: `//EventHostname/EventSubpath`,
       time: new Date().toISOString(),
       data: {
         requestEventId: req.body.id,
-        pfs: [footprintsV3[0]], // Use v3 footprint data
+        pfs: [footprintsV3[0]],
       },
     };
 
