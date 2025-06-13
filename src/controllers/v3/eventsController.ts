@@ -5,6 +5,8 @@ import { getAccessToken } from "../../utils/auth";
 
 const REQUEST_FULFILLED_EVENT_TYPE =
   "org.wbcsd.pact.ProductFootprint.RequestFulfilledEvent.3";
+const REQUEST_PUBLISHED_EVENT_TYPE =
+  "org.wbcsd.pact.ProductFootprint.PublishedEvent.3";
 
 export const handleWebhook = async (req: Request, res: Response) => {
   try {
@@ -21,7 +23,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
     }
 
     // If the event type is RequestFulfilledEvent, return 200 immediately
-    if (type === REQUEST_FULFILLED_EVENT_TYPE) {
+    if (type === REQUEST_PUBLISHED_EVENT_TYPE) {
       res.status(200).send();
       return;
     }
