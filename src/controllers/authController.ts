@@ -35,15 +35,6 @@ export const getToken = (req: Request, res: Response) => {
     return;
   }
 
-  // Log authentication parameters
-  console.log(req.body.grant_type]);
-  console.log('--- Authentication Parameters ---');
-  console.log(`grant_type: ${req.body.grant_type}`);
-  console.log(`scope: ${req.body.scope}`);
-  console.log(`resource: ${req.body.resource}`);
-  console.log(`audience: ${req.body.audience}`);
-  console.log('---------------------------------');
-
   const tokenPayload = { client_id };
   const secret = process.env.JWT_VERIFY_SECRET || "default_secret";
 
