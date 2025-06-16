@@ -30,6 +30,20 @@ export const getToken = (req: Request, res: Response) => {
     return;
   }
 
+  if (!req.body || !req.body.grant_type || req.body.grant_type !== "client_credentials") {
+    res.status(400).json({ error: "Missing grant_type 'client_credentials' in request body" });
+    return;
+  }
+
+  // Log authentication parameters
+  console.log(req.body.grant_type]);
+  console.log('--- Authentication Parameters ---');
+  console.log(`grant_type: ${req.body.grant_type}`);
+  console.log(`scope: ${req.body.scope}`);
+  console.log(`resource: ${req.body.resource}`);
+  console.log(`audience: ${req.body.audience}`);
+  console.log('---------------------------------');
+
   const tokenPayload = { client_id };
   const secret = process.env.JWT_VERIFY_SECRET || "default_secret";
 

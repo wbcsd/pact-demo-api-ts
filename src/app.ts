@@ -13,6 +13,8 @@ app.use(
     type: ["application/json", "application/cloudevents+json"],
   })
 );
+// For parsing application/x-www-form-urlencoded
+app.use(express.urlencoded({ extended: true })); 
 
 // Define routes
 app.use("/2/footprints", footprintRoutes);
