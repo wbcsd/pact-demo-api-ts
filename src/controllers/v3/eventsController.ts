@@ -21,7 +21,7 @@ export const handleWebhook = async (req: Request, res: Response) => {
       return;
     }
 
-    // If the event type is RequestFulfilledEvent, return 200 immediately
+    // If the event type is RequestFulfilledEvent, check pfIds and return immediately
     if (type === REQUEST_PUBLISHED_EVENT_TYPE) {
       if (data.pfIds && Array.isArray(data.pfIds)) {
         // check that all id's are valid guids
