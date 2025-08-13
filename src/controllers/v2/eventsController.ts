@@ -3,6 +3,10 @@ import { randomUUID } from "crypto";
 import { footprints } from "../../utils/footprints";
 import { getAccessToken } from "../../utils/auth";
 
+const REQUEST_FULFILLED_EVENT_TYPE = "org.wbcsd.pathfinder.ProductFootprintRequest.Fulfilled.v1";
+const REQUEST_PUBLISHED_EVENT_TYPE = "org.wbcsd.pathfinder.ProductFootprint.Published.v1";
+const REQUEST_REJECTED_EVENT_TYPE = "org.wbcsd.pathfinder.ProductFootprintRequest.Rejected.v1";
+
 export const createEvent = async (req: Request, res: Response) => {
   try {
     // Log the incoming request body
@@ -17,9 +21,75 @@ export const createEvent = async (req: Request, res: Response) => {
       return;
     }
 
-    // Prepare the response payload
+    // If the event type is RequestFulfilledEvent, check pfIds and return immediately
+    if (type === REQUEST_PUBLISHED_EVENT_TYPE) {
+      if (data.pfIds && Array.isArray(data.pfIds)) {
+        // check that all id's are valid guids
+        const valid = data.pfIds.every((pfId: string) =>
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pfId)
+        );
+        if (valid) {
+          res.status(200).send();
+          return;
+        }
+      }
+      res.status(400).json({
+        error: "Invalid pfId format",
+      });
+      return;
+    }
+
+    // Check if productId is ["urn:pact:null"] and send RequestRejectedEvent
+    if (
+      data.pf &&
+      data.pf.productIds &&
+      Array.isArray(data.pf.productIds) &&
+      data.pf.productIds.length === 1 &&
+      data.pf.productIds[0] === "urn:pact:null"
+    ) {
+      const rejectedPayload = {
+        type: REQUEST_REJECTED_EVENT_TYPE,
+        specversion: "1.0",
+        id: randomUUID(),
+        source: `//EventHostname/EventSubpath`,
+        time: new Date().toISOString(),
+        data: {
+          requestEventId: req.body.id,
+          error: {
+            code: "NotFound",
+            message: "The requested footprint could not be found.",
+          },
+        },
+      };
+
+      const token = await getAccessToken(source);
+
+      const response = await fetch(`${source}/2/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(rejectedPayload),
+      });
+
+      if (!response.ok) {
+        console.error(
+          `Failed to send rejected response to ${source}. Status: ${response.status}`
+        );
+      } else {
+        console.log(
+          "Successfully sent RequestRejectedEvent for null productId"
+        );
+      }
+
+      res.status(200).send();
+      return;
+    }
+
+    // Prepare the response payload using v3 event format
     const responsePayload = {
-      type: "org.wbcsd.pathfinder.ProductFootprintRequest.Fulfilled.v1",
+      type: REQUEST_FULFILLED_EVENT_TYPE,
       specversion,
       id: randomUUID(),
       source: `//EventHostname/EventSubpath`,

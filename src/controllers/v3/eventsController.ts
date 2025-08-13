@@ -3,12 +3,9 @@ import { randomUUID } from "crypto";
 import { footprintsV3 } from "../../utils/footprints";
 import { getAccessToken } from "../../utils/auth";
 
-const REQUEST_FULFILLED_EVENT_TYPE =
-  "org.wbcsd.pact.ProductFootprint.RequestFulfilledEvent.3";
-const REQUEST_PUBLISHED_EVENT_TYPE =
-  "org.wbcsd.pact.ProductFootprint.PublishedEvent.3";
-const REQUEST_REJECTED_EVENT_TYPE =
-  "org.wbcsd.pact.ProductFootprint.RequestRejectedEvent.3";
+const REQUEST_FULFILLED_EVENT_TYPE = "org.wbcsd.pact.ProductFootprint.RequestFulfilledEvent.3";
+const REQUEST_PUBLISHED_EVENT_TYPE = "org.wbcsd.pact.ProductFootprint.PublishedEvent.3";
+const REQUEST_REJECTED_EVENT_TYPE = "org.wbcsd.pact.ProductFootprint.RequestRejectedEvent.3";
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
@@ -24,9 +21,21 @@ export const createEvent = async (req: Request, res: Response) => {
       return;
     }
 
-    // If the event type is RequestFulfilledEvent, return 200 immediately
+    // If the event type is RequestFulfilledEvent, check pfIds and return immediately
     if (type === REQUEST_PUBLISHED_EVENT_TYPE) {
-      res.status(200).send();
+      if (data.pfIds && Array.isArray(data.pfIds)) {
+        // check that all id's are valid guids
+        const valid = data.pfIds.every((pfId: string) =>
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pfId)
+        );
+        if (valid) {
+          res.status(200).send();
+          return;
+        }
+      }
+      res.status(400).json({
+        error: "Invalid pfId format",
+      });
       return;
     }
 

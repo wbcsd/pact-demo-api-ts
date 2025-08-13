@@ -1,15 +1,15 @@
 export const getAccessToken = async function (source: any) {
-  const sourceUrl = new URL(source);
-  sourceUrl.search = "";
-  const cleanSource = sourceUrl.toString();
-  const baseSourceUrl = cleanSource.replace("/3/events", "");
-  const authUrl = `${baseSourceUrl}/auth/token`;
+  const tokenUrl = new URL(source);
+  tokenUrl.search = "";
+  tokenUrl.pathname = tokenUrl.pathname.replace(/[2,3]\/events$/, "") + "auth/token";
 
   const clientId = "test_client_id";
   const clientSecret = "test_client_secret";
 
   // Get the auth token from the source, use basic auth
-  const authResponse = await fetch(authUrl, {
+  console.log("Fetching access token from:", tokenUrl);
+  console.log("Using clientId:", clientId);
+  const authResponse = await fetch(tokenUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded",
