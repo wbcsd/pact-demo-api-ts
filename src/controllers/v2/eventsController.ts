@@ -3,7 +3,7 @@ import { randomUUID } from "crypto";
 import { footprints } from "../../utils/footprints";
 import { getAccessToken } from "../../utils/auth";
 
-export const handleWebhook = async (req: Request, res: Response) => {
+export const createEvent = async (req: Request, res: Response) => {
   try {
     // Log the incoming request body
     console.log("Received webhook request:", JSON.stringify(req.body, null, 2));

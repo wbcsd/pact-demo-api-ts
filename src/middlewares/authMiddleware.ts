@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 const JWT_VERIFY_SECRET = process.env.JWT_VERIFY_SECRET || "default_secret";
 
-export const authenticateJWT = (
+export const authenticate = (
   req: Request,
   res: Response,
   next: NextFunction
