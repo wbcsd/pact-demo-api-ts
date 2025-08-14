@@ -7,7 +7,7 @@ const REQUEST_FULFILLED_EVENT_TYPE = "org.wbcsd.pathfinder.ProductFootprintReque
 const REQUEST_PUBLISHED_EVENT_TYPE = "org.wbcsd.pathfinder.ProductFootprint.Published.v1";
 const REQUEST_REJECTED_EVENT_TYPE = "org.wbcsd.pathfinder.ProductFootprintRequest.Rejected.v1";
 
-export const handleWebhook = async (req: Request, res: Response) => {
+export const createEvent = async (req: Request, res: Response) => {
   try {
     // Log the incoming request body
     console.log("Received webhook request:", JSON.stringify(req.body, null, 2));

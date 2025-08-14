@@ -98,17 +98,10 @@ pact-demo-endpoint/
 │   │   │   └── productFootprint.ts
 │   │   └── v3/
 │   │       └── productFootprint.ts
-│   ├── routes/                   # Express route definitions
-│   │   ├── authRoutes.ts
-│   │   ├── eventsRoutes.ts
-│   │   ├── footprintRoutes.ts
-│   │   ├── v3EventsRoutes.ts
-│   │   └── v3FootprintRoutes.ts
 │   └── utils/                    # Utility functions
 │       ├── auth.ts               # Authentication helpers
 │       ├── footprints.ts         # Mock footprint data
 │       ├── headers.ts            # HTTP header utilities
-│       └── jwtUtils.ts           # JWT utilities
 ├── infra/                        # AWS Terraform configuration
 ├── package.json                  # Project dependencies and scripts
 ├── tsconfig.json                # TypeScript configuration

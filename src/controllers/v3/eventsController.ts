@@ -7,7 +7,7 @@ const REQUEST_FULFILLED_EVENT_TYPE = "org.wbcsd.pact.ProductFootprint.RequestFul
 const REQUEST_PUBLISHED_EVENT_TYPE = "org.wbcsd.pact.ProductFootprint.PublishedEvent.3";
 const REQUEST_REJECTED_EVENT_TYPE = "org.wbcsd.pact.ProductFootprint.RequestRejectedEvent.3";
 
-export const handleWebhook = async (req: Request, res: Response) => {
+export const createEvent = async (req: Request, res: Response) => {
   try {
     // Log the incoming request body
     console.log("Received webhook request:", JSON.stringify(req.body, null, 2));
