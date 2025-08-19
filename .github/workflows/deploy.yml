@@ -10,6 +10,7 @@ env:
   ECR_REPOSITORY: pact-demo-endpoint-repo
   ECS_SERVICE: pact-demo-endpoint-api-service
   ECS_CLUSTER: api-cluster
+  BASE_URL: https://ie8onambsh.execute-api.eu-north-1.amazonaws.com/prod
   TERRAFORM_DIR: ./infra
 
 jobs:
@@ -52,13 +53,15 @@ jobs:
         working-directory: ${{ env.TERRAFORM_DIR }}
         run: |
           terraform plan -detailed-exitcode \
-            -var="jwt_verify_secret=${{ secrets.JWT_VERIFY_SECRET }}"
+            -var="jwt_verify_secret=${{ secrets.JWT_VERIFY_SECRET }}" \
+            -var="base_url=${{ env.BASE_URL }}"
 
       - name: Terraform Apply
         working-directory: infra
         run: |
           terraform apply -auto-approve \
-           -var="jwt_verify_secret=${{ secrets.JWT_VERIFY_SECRET }}"
+           -var="jwt_verify_secret=${{ secrets.JWT_VERIFY_SECRET }}" \
+           -var="base_url=${{ env.BASE_URL }}"
         env:
           TF_IN_AUTOMATION: true
 

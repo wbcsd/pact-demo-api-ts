@@ -20,6 +20,10 @@ resource "aws_ecs_task_definition" "api_task" {
         {
           name  = "JWT_VERIFY_SECRET",
           value = var.jwt_verify_secret
+        },
+        {
+          name  = "BASE_URL",
+          value = "var.base_url"
         }
       ],
       logConfiguration = {
