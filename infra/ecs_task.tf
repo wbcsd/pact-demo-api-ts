@@ -23,7 +23,7 @@ resource "aws_ecs_task_definition" "api_task" {
         },
         {
           name  = "BASE_URL",
-          value = "var.base_url"
+          value = var.base_url
         }
       ],
       logConfiguration = {
