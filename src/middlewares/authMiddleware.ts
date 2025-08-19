@@ -1,8 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 
-const JWT_VERIFY_SECRET = process.env.JWT_VERIFY_SECRET || "default_secret";
-
 export const authenticate = (
   req: Request,
   res: Response,
@@ -14,7 +12,7 @@ export const authenticate = (
     const token = authHeader.split(" ")[1];
 
     try {
-      const decoded = jwt.verify(token, JWT_VERIFY_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_VERIFY_SECRET as string);
       res.locals.client = decoded;
 
       next();
