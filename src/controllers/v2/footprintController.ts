@@ -40,8 +40,8 @@ export const getFootprints = (req: Request, res: Response) => {
   );
 
   // Build pagination Link header
-  // TODO get the base URL from an env variable because the infra setup with api gateway > alb > ecs fargate
-  const baseUrl = `https://ie8onambsh.execute-api.eu-north-1.amazonaws.com/prod/2/footprints`;
+  // Get the public base URL from environnment variable or otherwise derive from headers.
+  const baseUrl = (process.env.BASE_URL || req.protocol + "://" + req.headers.host) + req.path;
   const links: string[] = getLinksForHeader(
     baseUrl,
     limitVal,
