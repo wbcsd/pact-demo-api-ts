@@ -21,3 +21,9 @@ variable "jwt_verify_secret" {
   type        = string
   sensitive   = true
 }
+
+variable "base_url" {
+  description = "Public base URL on which the service is running"
+  type        = string
+  sensitive   = true
+}
