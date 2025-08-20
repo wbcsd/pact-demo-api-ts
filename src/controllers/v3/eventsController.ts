@@ -2,15 +2,22 @@ import { Request, Response } from "express";
 import { randomUUID } from "crypto";
 import { footprintsV3 } from "../../utils/footprints";
 import { getAccessToken } from "../../utils/auth";
+import logger from "../../utils/logger";
 
-const REQUEST_FULFILLED_EVENT_TYPE = "org.wbcsd.pact.ProductFootprint.RequestFulfilledEvent.3";
-const REQUEST_PUBLISHED_EVENT_TYPE = "org.wbcsd.pact.ProductFootprint.PublishedEvent.3";
-const REQUEST_REJECTED_EVENT_TYPE = "org.wbcsd.pact.ProductFootprint.RequestRejectedEvent.3";
+const REQUEST_FULFILLED_EVENT_TYPE =
+  "org.wbcsd.pact.ProductFootprint.RequestFulfilledEvent.3";
+const REQUEST_PUBLISHED_EVENT_TYPE =
+  "org.wbcsd.pact.ProductFootprint.PublishedEvent.3";
+const REQUEST_REJECTED_EVENT_TYPE =
+  "org.wbcsd.pact.ProductFootprint.RequestRejectedEvent.3";
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
     // Log the incoming request body
-    console.log("Received webhook request:", JSON.stringify(req.body, null, 2));
+    logger.info(
+      "Received webhook request:",
+      JSON.stringify(req.body, null, 2) as any
+    );
 
     const { specversion, source, type, data } = req.body;
 
@@ -26,7 +33,9 @@ export const createEvent = async (req: Request, res: Response) => {
       if (data.pfIds && Array.isArray(data.pfIds)) {
         // check that all id's are valid guids
         const valid = data.pfIds.every((pfId: string) =>
-          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(pfId)
+          /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+            pfId
+          )
         );
         if (valid) {
           res.status(200).send();
@@ -73,11 +82,11 @@ export const createEvent = async (req: Request, res: Response) => {
       });
 
       if (!response.ok) {
-        console.error(
+        logger.error(
           `Failed to send rejected response to ${source}. Status: ${response.status}`
         );
       } else {
-        console.log(
+        logger.info(
           "Successfully sent RequestRejectedEvent for null productId"
         );
       }
@@ -111,7 +120,7 @@ export const createEvent = async (req: Request, res: Response) => {
     });
 
     if (!response.ok) {
-      console.error(
+      logger.error(
         `Failed to send response to ${source}. Status: ${response.status}`
       );
       res.status(502).json({
@@ -122,12 +131,12 @@ export const createEvent = async (req: Request, res: Response) => {
     }
 
     const responseData = await response.text();
-    console.log("Response from destination:", responseData);
+    logger.info("Response from destination:", responseData as any);
 
     // Return success response
     res.status(200).send();
   } catch (error) {
-    console.error("Error processing webhook:", error);
+    logger.error("Error processing webhook:", error as any);
     res.status(500).json({
       error: "Internal server error processing webhook",
       details: error instanceof Error ? error.message : String(error),
