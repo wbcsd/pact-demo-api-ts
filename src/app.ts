@@ -3,10 +3,12 @@ import fs from "fs";
 import dotenv from "dotenv";
 import http from "http";
 import https from "https";
+import pino from "pino-http";
 import { getToken } from "./controllers/authController";
 import { authenticate } from "./middlewares/authMiddleware";
 import * as v2 from "./controllers/v2";
 import * as v3 from "./controllers/v3";
+import logger from "./utils/logger";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -21,6 +23,23 @@ app.use(
 );
 // For parsing application/x-www-form-urlencoded
 app.use(express.urlencoded({ extended: true }));
+
+// Pino logging middleware
+app.use(
+  pino({
+    logger,
+    name: process.env.SERVICE_NAME,
+    // Log debug information for anything lower than production
+    level: process.env.NODE_ENV === "prod" ? "info" : "debug",
+    transport: {
+      target: "pino-pretty",
+      options: {
+        colorize: true,
+        translateTime: "SYS:standard",
+      },
+    },
+  })
+);
 
 // Auth routes
 app.post("/auth/token", getToken);
@@ -69,12 +88,12 @@ const key =
 // Start the server
 const PORT = process.env.PORT || 3000;
 if (!cert && !key) {
-  console.warn("No SSL certificate or key provided. Running in HTTP mode.");
+  logger.warn("No SSL certificate or key provided. Running in HTTP mode.");
 }
 var server =
   !cert || !key
     ? http.createServer(app)
     : https.createServer({ key, cert }, app);
 server.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  logger.info(`Server is running on port ${PORT}`);
 });
