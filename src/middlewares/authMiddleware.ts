@@ -21,7 +21,7 @@ export const authenticate = (
 
       next();
     } catch (err) {
-      logger.error(err);
+      logger.error("error", err);
       res.status(400).json({ code: "BadRequest" });
     }
   } else {

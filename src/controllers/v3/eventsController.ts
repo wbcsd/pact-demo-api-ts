@@ -136,7 +136,7 @@ export const createEvent = async (req: Request, res: Response) => {
     // Return success response
     res.status(200).send();
   } catch (error) {
-    logger.error("Error processing webhook:", error as any);
+    logger.error("Error processing webhook:", error);
     res.status(500).json({
       error: "Internal server error processing webhook",
       details: error instanceof Error ? error.message : String(error),
