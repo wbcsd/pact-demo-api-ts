@@ -8,7 +8,7 @@ import { getToken } from "./controllers/authController";
 import { authenticate } from "./middlewares/authMiddleware";
 import * as v2 from "./controllers/v2";
 import * as v3 from "./controllers/v3";
-import logger from "./utils/logger";
+import logger, { pinoInstance } from "./utils/logger";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 // Pino logging middleware
 app.use(
   pino({
-    logger,
+    logger: pinoInstance,
     name: process.env.SERVICE_NAME,
     // Log debug information for anything lower than production
     level: process.env.NODE_ENV === "prod" ? "info" : "debug",
