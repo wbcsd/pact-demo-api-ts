@@ -3,14 +3,15 @@ import pinoHttp from "pino-http";
 
 const pinoInstance = pino({
   ...(process.env.NODE_ENV !== "production"
-    ? { level: "debug", 
-        transport: { 
-          target: "pino-pretty", 
-          options: { 
+    ? {
+        level: "debug",
+        transport: {
+          target: "pino-pretty",
+          options: {
             colorize: true,
-            translateTime: "SYS:standard"
-          } 
-        } 
+            translateTime: "SYS:standard",
+          },
+        },
       }
     : { level: "info" }),
 });
@@ -32,7 +33,7 @@ const logger = {
   debug: wrap("debug"),
 };
 
-const logger_middleware = pinoHttp({ logger: pinoInstance });
+const loggerMiddleware = pinoHttp({ logger: pinoInstance });
 
-export { logger_middleware };
+export { loggerMiddleware };
 export default logger;

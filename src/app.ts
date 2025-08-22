@@ -7,7 +7,7 @@ import { getToken } from "./controllers/authController";
 import { authenticate } from "./middlewares/authMiddleware";
 import * as v2 from "./controllers/v2";
 import * as v3 from "./controllers/v3";
-import logger, { logger_middleware } from "./utils/logger";
+import logger, { loggerMiddleware } from "./utils/logger";
 
 // Load environment variables from .env file
 dotenv.config();
@@ -24,7 +24,7 @@ app.use(
 app.use(express.urlencoded({ extended: true }));
 
 // Logging middleware
-app.use(logger_middleware);
+app.use(loggerMiddleware);
 
 // Auth routes
 app.post("/auth/token", getToken);
