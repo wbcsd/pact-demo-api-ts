@@ -1,9 +1,18 @@
 import pino from "pino";
+import pinoHttp from "pino-http";
 
 const pinoInstance = pino({
   ...(process.env.NODE_ENV !== "production"
-    ? { transport: { target: "pino-pretty", options: { colorize: true } } }
-    : {}),
+    ? { level: "debug", 
+        transport: { 
+          target: "pino-pretty", 
+          options: { 
+            colorize: true,
+            translateTime: "SYS:standard"
+          } 
+        } 
+      }
+    : { level: "info" }),
 });
 
 const wrap =
@@ -23,5 +32,7 @@ const logger = {
   debug: wrap("debug"),
 };
 
-export { pinoInstance };
+const logger_middleware = pinoHttp({ logger: pinoInstance });
+
+export { logger_middleware };
 export default logger;
