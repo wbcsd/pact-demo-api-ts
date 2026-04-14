@@ -9,7 +9,6 @@ The API supports both PACT v2 and v3 specifications and includes:
 - Product footprint management endpoints
 - Webhook event handling for carbon footprint requests
 - JWT-based authentication
-- AWS deployment infrastructure (ECS with Terraform)
 
 ## Prerequisites
 
@@ -21,11 +20,9 @@ Before setting up the development environment, ensure you have the following ins
 - **npm**: Version 9.x or higher (comes with Node.js)
 - **Git**: For version control
 
-### Optional Tools (for deployment)
+### Optional Tools
 
 - **Docker**: For containerization
-- **AWS CLI**: For cloud deployment
-- **Terraform**: For infrastructure as code
 
 ## Local Development Setup
 
@@ -102,7 +99,6 @@ pact-demo-endpoint/
 │       ├── auth.ts               # Authentication helpers
 │       ├── footprints.ts         # Mock footprint data
 │       ├── headers.ts            # HTTP header utilities
-├── infra/                        # AWS Terraform configuration
 ├── package.json                  # Project dependencies and scripts
 ├── tsconfig.json                # TypeScript configuration
 ├── Dockerfile                   # Docker configuration
@@ -258,34 +254,6 @@ docker build -t pact-demo-endpoint .
 docker run -p 3000:3000 -e JWT_VERIFY_SECRET=your_secret pact-demo-endpoint
 ```
 
-## Deployment
-
-The project includes automated AWS deployment using GitHub Actions with Terraform and ECS.
-
-### GitHub Actions CI/CD Pipeline
-
-The deployment pipeline (`.github/workflows/deploy.yml`) automatically triggers on pushes to the `main` branch and performs:
-
-1. **Infrastructure Management**:
-
-   - Runs Terraform format check, validation, and planning
-   - Applies infrastructure changes to AWS (ECS cluster, ECR repository, VPC, etc.)
-   - Uses secrets for JWT verification and AWS credentials
-
-2. **Application Build & Deploy**:
-   - Sets up Node.js 22 environment and installs dependencies
-   - Compiles TypeScript to JavaScript (`npm run build`)
-   - Builds Docker image and tags it with Git SHA and `latest`
-   - Pushes images to AWS ECR repository
-   - Forces ECS service deployment with new image
-   - Waits for deployment completion and reports service status
-
-**Required Secrets**:
-
-- `AWS_ACCESS_KEY_ID` - AWS access key for deployment
-- `AWS_SECRET_ACCESS_KEY` - AWS secret key for deployment
-- `JWT_VERIFY_SECRET` - JWT signing secret for the application
-
 ## Troubleshooting
 
 ### Common Issues
@@ -313,7 +281,6 @@ The deployment pipeline (`.github/workflows/deploy.yml`) automatically triggers 
 ### Logs
 
 - Application logs are output to console
-- For production deployment, logs are sent to AWS CloudWatch
 
 ## Environment Variables Reference
 
