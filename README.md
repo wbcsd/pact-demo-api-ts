@@ -47,4 +47,4 @@ The server starts on `http://localhost:3000`. See [DEVELOPERS.md](DEVELOPERS.md)
 
 ## License
 
-ISC
+MIT
