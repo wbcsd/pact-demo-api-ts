@@ -28,7 +28,7 @@ app.use(loggerMiddleware);
 
 // Auth routes
 if (process.env.CONFORMANCE_IMPL_OPENID_CONNECT !== "true") {
-app.post("/auth/token", getToken);
+  app.post("/auth/token", getToken);
 } else {
   // OpenID Connect discovery endpoint
   app.get("/.well-known/openid-configuration", getOpenIdConfiguration);
@@ -88,6 +88,12 @@ var server =
 server.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
 
+  if (process.env.CONFORMANCE_BUG_FOOTPRINTS_SCHEMA === "true") 
+    logger.warn("CONFORMANCE_BUG_FOOTPRINTS_SCHEMA active: /footprints returns footprints missing the required 'pcf' field");
+  if (process.env.CONFORMANCE_BUG_AUTH_FORMAT === "true") 
+    logger.warn("CONFORMANCE_BUG_AUTH_FORMAT active: /auth/token returns wrong status code and body format");
+  if (process.env.CONFORMANCE_BUG_FOOTPRINT_NOT_FOUND === "true") 
+    logger.warn("CONFORMANCE_BUG_FOOTPRINT_NOT_FOUND active: /footprints/:id returns wrong error format on 404");
   if (process.env.CONFORMANCE_IMPL_DELAY) 
     logger.info(`CONFORMANCE_IMPL_DELAY active: callback delay set to ${process.env.CONFORMANCE_IMPL_DELAY}ms`);
   if (process.env.CONFORMANCE_IMPL_RELATIVE_LINKS === "true") 

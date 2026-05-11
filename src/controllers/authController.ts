@@ -39,7 +39,14 @@ export const getToken = (req: Request, res: Response) => {
   const secret = process.env.JWT_VERIFY_SECRET || "default_secret";
 
   const access_token = jwt.sign(tokenPayload, secret, { expiresIn: "1h" });
-  res.status(200).json({ access_token });
+
+  // Conformance bug: return wrong HTTP status code and wrong body format
+  if (process.env.CONFORMANCE_BUG_AUTH_FORMAT === "true") {
+    res.status(200).json({ token: access_token, token_type: "wrong" });
+    return;
+  }
+
+  res.status(200).json({ access_token, token_type: "Bearer" });
 };
 
 export const getOpenIdConfiguration = (req: Request, res: Response) => {

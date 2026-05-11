@@ -10,6 +10,11 @@ export const getFootprintById = (req: Request, res: Response) => {
   if (footprint) {
     res.status(200).json({ data: footprint });
   } else {
+    // Conformance bug: return wrong error format when footprint is not found
+    if (process.env.CONFORMANCE_BUG_FOOTPRINT_NOT_FOUND === "true") {
+      res.status(404).json({ error: "Footprint not found" });
+      return;
+    }
     res.status(404).json({
       code: "NotFound",
       message: `Footprint with id ${id} not found.`,
@@ -176,5 +181,10 @@ export const getFootprints = (req: Request, res: Response) => {
 
   res.setHeader("Link", links.join(", "));
 
-  res.status(200).json({ data: pagedFootprints });
+  // Conformance bug: strip a required field (pcf) from each footprint in the response
+  const responseData = process.env.CONFORMANCE_BUG_FOOTPRINTS_SCHEMA === "true"
+    ? pagedFootprints.map(({ created, ...rest }) => rest)
+    : pagedFootprints;
+
+  res.status(200).json({ data: responseData });
 };
