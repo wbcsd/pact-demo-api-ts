@@ -3,7 +3,7 @@ import fs from "fs";
 import dotenv from "dotenv";
 import http from "http";
 import https from "https";
-import { getToken } from "./controllers/authController";
+import { getOpenIdConfiguration, getToken } from "./controllers/authController";
 import { authenticate } from "./middlewares/authMiddleware";
 import * as v2 from "./controllers/v2";
 import * as v3 from "./controllers/v3";
@@ -27,7 +27,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(loggerMiddleware);
 
 // Auth routes
+if (process.env.CONFORMANCE_IMPL_OPENID_CONNECT !== "true") {
 app.post("/auth/token", getToken);
+} else {
+  // OpenID Connect discovery endpoint
+  app.get("/.well-known/openid-configuration", getOpenIdConfiguration);
+  app.post("/discovered/auth/token", getToken);
+}
 
 // Version 2.x routes
 app.get("/2/footprints", authenticate, v2.footprints.getFootprints);
@@ -81,4 +87,11 @@ var server =
     : https.createServer({ key, cert }, app);
 server.listen(PORT, () => {
   logger.info(`Server is running on port ${PORT}`);
+
+  if (process.env.CONFORMANCE_IMPL_DELAY) 
+    logger.info(`CONFORMANCE_IMPL_DELAY active: callback delay set to ${process.env.CONFORMANCE_IMPL_DELAY}ms`);
+  if (process.env.CONFORMANCE_IMPL_RELATIVE_LINKS === "true") 
+    logger.info("CONFORMANCE_IMPL_RELATIVE_LINKS active: /footprints Link header uses relative URLs");
+  if (process.env.CONFORMANCE_IMPL_OPENID_CONNECT === "true") 
+    logger.info("CONFORMANCE_IMPL_OPENID_CONNECT active: /.well-known/openid-configuration endpoint enabled");
 });

@@ -41,3 +41,14 @@ export const getToken = (req: Request, res: Response) => {
   const access_token = jwt.sign(tokenPayload, secret, { expiresIn: "1h" });
   res.status(200).json({ access_token });
 };
+
+export const getOpenIdConfiguration = (req: Request, res: Response) => {
+  const baseUrl = process.env.BASE_URL || req.protocol + "://" + req.headers.host;
+  res.status(200).json({
+    issuer: baseUrl,
+    token_endpoint: `${baseUrl}/discovered/auth/token`,
+    response_types_supported: ["token"],
+    grant_types_supported: ["client_credentials"],
+    token_endpoint_auth_methods_supported: ["client_secret_basic"],
+  });
+}

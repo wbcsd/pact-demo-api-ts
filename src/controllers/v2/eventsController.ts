@@ -56,83 +56,85 @@ export const createEvent = async (req: Request, res: Response) => {
       data.pf.productIds.length === 1 &&
       data.pf.productIds[0] === "urn:pact:null"
     ) {
-      const rejectedPayload = {
-        type: REQUEST_REJECTED_EVENT_TYPE,
-        specversion: "1.0",
-        id: randomUUID(),
-        source: `//EventHostname/EventSubpath`,
-        time: new Date().toISOString(),
-        data: {
-          requestEventId: req.body.id,
-          error: {
-            code: "NotFound",
-            message: "The requested footprint could not be found.",
-          },
-        },
-      };
+      const delay = parseInt(process.env.CONFORMANCE_IMPL_DELAY || "0");
+      setTimeout(async () => {
+        try {
+          const rejectedPayload = {
+            type: REQUEST_REJECTED_EVENT_TYPE,
+            specversion: "1.0",
+            id: randomUUID(),
+            source: `//EventHostname/EventSubpath`,
+            time: new Date().toISOString(),
+            data: {
+              requestEventId: req.body.id,
+              error: {
+                code: "NotFound",
+                message: "The requested footprint could not be found.",
+              },
+            },
+          };
 
-      const token = await getAccessToken(source);
+          const token = await getAccessToken(source);
+          const response = await fetch(`${source}/2/events`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(rejectedPayload),
+          });
 
-      const response = await fetch(`${source}/2/events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(rejectedPayload),
-      });
+          if (!response.ok) {
+            logger.error(`Failed to send rejected response to ${source}. Status: ${response.status}`);
+          } else {
+            logger.info("Successfully sent RequestRejectedEvent");
+          }
 
-      if (!response.ok) {
-        logger.error(
-          `Failed to send rejected response to ${source}. Status: ${response.status}`
-        );
-      } else {
-        logger.info(
-          "Successfully sent RequestRejectedEvent for null productId"
-        );
-      }
+        } catch (error) {
+          logger.error(`Failed to send rejected response to ${source}. Error: ${error}`);
+        }
+      }, delay);
 
       res.status(200).send();
       return;
     }
 
-    // Prepare the response payload using v3 event format
-    const responsePayload = {
-      type: REQUEST_FULFILLED_EVENT_TYPE,
-      specversion,
-      id: randomUUID(),
-      source: `//EventHostname/EventSubpath`,
-      time: new Date().toISOString(),
-      data: {
-        requestEventId: req.body.id,
-        pfs: [footprints[0]],
-      },
-    };
+    const delay = parseInt(process.env.CONFORMANCE_IMPL_DELAY || "0");
+    setTimeout(async () => {
+      try {
+        const responsePayload = {
+          type: REQUEST_FULFILLED_EVENT_TYPE,
+          specversion,
+          id: randomUUID(),
+          source: `//EventHostname/EventSubpath`,
+          time: new Date().toISOString(),
+          data: {
+            requestEventId: req.body.id,
+            pfs: [footprints[0]],
+          },
+        };
 
-    const token = await getAccessToken(source);
+        const token = await getAccessToken(source);
+        const response = await fetch(`${source}/2/events`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(responsePayload),
+        });
 
-    const response = await fetch(`${source}/2/events`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(responsePayload),
-    });
-
-    if (!response.ok) {
-      logger.error(
-        `Failed to send response to ${source}. Status: ${response.status}`
-      );
-      res.status(502).json({
-        error: `Failed to forward request to ${source}`,
-        status: response.status,
-      });
-      return;
-    }
-
-    const responseData = await response.text();
-    logger.info("Response from destination:", responseData as any);
+        if (!response.ok) {
+          logger.error(
+            `Failed to send response to ${source}. Status: ${response.status}`
+          );
+        }
+        const responseData = await response.text();
+        logger.info("Response from destination:", responseData as any);
+      } catch (error) {
+        logger.error(`Error sending response to ${source}:`, error);
+      }
+    }, delay);
 
     // Return success response
     res.status(200).send();

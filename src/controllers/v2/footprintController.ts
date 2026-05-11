@@ -41,7 +41,9 @@ export const getFootprints = (req: Request, res: Response) => {
 
   // Build pagination Link header
   // Get the public base URL from environnment variable or otherwise derive from headers.
-  const baseUrl = (process.env.BASE_URL || req.protocol + "://" + req.headers.host) + req.path;
+  const baseUrl = process.env.CONFORMANCE_IMPL_RELATIVE_LINKS === "true"
+    ? req.path
+    : (process.env.BASE_URL || req.protocol + "://" + req.headers.host) + req.path;
   const links: string[] = getLinksForHeader(
     baseUrl,
     limitVal,
