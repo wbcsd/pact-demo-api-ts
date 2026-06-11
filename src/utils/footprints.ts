@@ -1,8 +1,10 @@
 import { ProductFootprint } from "../models/v2/productFootprint";
 import { ProductFootprint as ProductFootprintV3 } from "../models/v3/productFootprint";
 
-// Mock data for demonstration
-export const footprints: ProductFootprint[] = [
+// Mock data for demonstration.
+// Cast is required because mock literals use plain strings while the package
+// uses TypeScript enums (same runtime values, incompatible at the type level).
+export const footprints = [
   {
     id: "b1f8c0d2-7c4e-4e67-9a9c-2e4c12345678",
     specVersion: "2.0.0",
@@ -473,10 +475,11 @@ export const footprints: ProductFootprint[] = [
       },
     ],
   },
-];
+] as unknown as ProductFootprint[];
 
-// Mock data for ProductFootprintV3 (version 3.0 schema)
-export const footprintsV3: ProductFootprintV3[] = [
+// Mock data for ProductFootprintV3 (version 3.0 schema).
+// Same cast rationale as above.
+export const footprintsV3 = [
   {
     id: "b1f8c0d2-7c4e-4e67-9a9c-2e4c12345678",
     specVersion: "3.0.0",
@@ -791,4 +794,4 @@ export const footprintsV3: ProductFootprintV3[] = [
       },
     ],
   },
-];
+] as unknown as ProductFootprintV3[];

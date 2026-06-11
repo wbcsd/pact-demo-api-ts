@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
 import { PactApiClient } from "@wbcsd/pact-api-client";
+import { EventTypes, schema, validate } from "@wbcsd/pact-data-model/v3_0";
 import { footprintsV3 } from "../../utils/footprints";
 import logger from "../../utils/logger";
-
-const REQUEST_PUBLISHED_EVENT_TYPE =
-  "org.wbcsd.pact.ProductFootprint.PublishedEvent.3";
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
@@ -18,13 +16,33 @@ export const createEvent = async (req: Request, res: Response) => {
 
     if (!specversion || !source || !type || !data) {
       res.status(400).json({
-        error: "Missing required fields in request body",
+        code: "BadRequest",
+        message: "Missing required fields in request body",
       });
       return;
     }
 
-    // If the event type is RequestFulfilledEvent, check pfIds and return immediately
-    if (type === REQUEST_PUBLISHED_EVENT_TYPE) {
+    // Validate against the appropriate schema for this event type
+    const eventSchema =
+      type === EventTypes.Published
+        ? schema.PublishedEvent
+        : type === EventTypes.RequestCreated
+          ? schema.RequestCreatedEvent
+          : null;
+
+    if (eventSchema) {
+      const validation = validate(eventSchema, req.body);
+      if (!validation.valid) {
+        res.status(400).json({
+          code: "BadRequest",
+          message: validation.errors.join("; "),
+        });
+        return;
+      }
+    }
+
+    // Inbound PublishedEvent: validate pfIds and acknowledge
+    if (type === EventTypes.Published) {
       if (data.pfIds && Array.isArray(data.pfIds)) {
         // check that all id's are valid guids
         const valid = data.pfIds.every((pfId: string) =>
@@ -38,7 +56,8 @@ export const createEvent = async (req: Request, res: Response) => {
         }
       }
       res.status(400).json({
-        error: "Invalid pfId format",
+        code: "BadRequest",
+        message: "Invalid pfId format",
       });
       return;
     }
@@ -78,9 +97,7 @@ export const createEvent = async (req: Request, res: Response) => {
       "//EventHostname/EventSubpath"
     );
 
-    // Cast needed: local model uses string literals; package uses a ProductFootprintStatus enum
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await client.fulfillFootprint(req.body.id, [footprintsV3[0] as any]);
+    await client.fulfillFootprint(req.body.id, [footprintsV3[0]]);
     logger.info(`Successfully sent RequestFulfilledEvent to ${source}`);
 
     // Return success response
