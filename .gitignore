@@ -133,3 +133,5 @@ dist/
 
 # Terraform
 .terraform/
+
+.DS_Store

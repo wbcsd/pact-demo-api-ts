@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@wbcsd/pact-api-client": "^1.0.0",
     "dotenv": "^17.2.1",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",

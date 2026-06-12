@@ -1,15 +1,8 @@
 import { Request, Response } from "express";
-import { randomUUID } from "crypto";
+import { PactApiClient } from "@wbcsd/pact-api-client";
+import { EventTypes, schema, validate } from "@wbcsd/pact-data-model/v3_0";
 import { footprintsV3 } from "../../utils/footprints";
-import { getAccessToken } from "../../utils/auth";
 import logger from "../../utils/logger";
-
-const REQUEST_FULFILLED_EVENT_TYPE =
-  "org.wbcsd.pact.ProductFootprint.RequestFulfilledEvent.3";
-const REQUEST_PUBLISHED_EVENT_TYPE =
-  "org.wbcsd.pact.ProductFootprint.PublishedEvent.3";
-const REQUEST_REJECTED_EVENT_TYPE =
-  "org.wbcsd.pact.ProductFootprint.RequestRejectedEvent.3";
 
 export const createEvent = async (req: Request, res: Response) => {
   try {
@@ -23,13 +16,33 @@ export const createEvent = async (req: Request, res: Response) => {
 
     if (!specversion || !source || !type || !data) {
       res.status(400).json({
-        error: "Missing required fields in request body",
+        code: "BadRequest",
+        message: "Missing required fields in request body",
       });
       return;
     }
 
-    // If the event type is RequestFulfilledEvent, check pfIds and return immediately
-    if (type === REQUEST_PUBLISHED_EVENT_TYPE) {
+    // Validate against the appropriate schema for this event type
+    const eventSchema =
+      type === EventTypes.Published
+        ? schema.PublishedEvent
+        : type === EventTypes.RequestCreated
+          ? schema.RequestCreatedEvent
+          : null;
+
+    if (eventSchema) {
+      const validation = validate(eventSchema, req.body);
+      if (!validation.valid) {
+        res.status(400).json({
+          code: "BadRequest",
+          message: validation.errors.join("; "),
+        });
+        return;
+      }
+    }
+
+    // Inbound PublishedEvent: validate pfIds and acknowledge
+    if (type === EventTypes.Published) {
       if (data.pfIds && Array.isArray(data.pfIds)) {
         // check that all id's are valid guids
         const valid = data.pfIds.every((pfId: string) =>
@@ -43,7 +56,8 @@ export const createEvent = async (req: Request, res: Response) => {
         }
       }
       res.status(400).json({
-        error: "Invalid pfId format",
+        code: "BadRequest",
+        message: "Invalid pfId format",
       });
       return;
     }
@@ -55,83 +69,36 @@ export const createEvent = async (req: Request, res: Response) => {
       data.productId.length === 1 &&
       data.productId[0] === "urn:pact:null"
     ) {
-      const rejectedPayload = {
-        type: REQUEST_REJECTED_EVENT_TYPE,
-        specversion: "1.0",
-        id: randomUUID(),
-        source: `//EventHostname/EventSubpath`,
-        time: new Date().toISOString(),
-        data: {
-          requestEventId: req.body.id,
-          error: {
-            code: "NotFound",
-            message: "The requested footprint could not be found.",
-          },
-        },
-      };
+      const client = new PactApiClient(
+        source,
+        "test_client_id",
+        "test_client_secret",
+        "//EventHostname/EventSubpath"
+      );
 
-      const token = await getAccessToken(source);
-
-      const response = await fetch(`${source}/3/events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(rejectedPayload),
-      });
-
-      if (!response.ok) {
-        logger.error(
-          `Failed to send rejected response to ${source}. Status: ${response.status}`
-        );
-      } else {
-        logger.info(
-          "Successfully sent RequestRejectedEvent for null productId"
-        );
+      try {
+        await client.rejectFootprint(req.body.id, {
+          code: "NotFound",
+          message: "The requested footprint could not be found.",
+        });
+        logger.info("Successfully sent RequestRejectedEvent for null productId");
+      } catch (err) {
+        logger.error(`Failed to send rejected response to ${source}:`, err);
       }
 
       res.status(200).send();
       return;
     }
 
-    // Prepare the response payload using v3 event format
-    const responsePayload = {
-      type: REQUEST_FULFILLED_EVENT_TYPE,
-      specversion: "1.0",
-      id: randomUUID(),
-      source: `//EventHostname/EventSubpath`,
-      time: new Date().toISOString(),
-      data: {
-        requestEventId: req.body.id,
-        pfs: [footprintsV3[0]],
-      },
-    };
+    const client = new PactApiClient(
+      source,
+      "test_client_id",
+      "test_client_secret",
+      "//EventHostname/EventSubpath"
+    );
 
-    const token = await getAccessToken(source);
-
-    const response = await fetch(`${source}/3/events`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(responsePayload),
-    });
-
-    if (!response.ok) {
-      logger.error(
-        `Failed to send response to ${source}. Status: ${response.status}`
-      );
-      res.status(502).json({
-        error: `Failed to forward request to ${source}`,
-        status: response.status,
-      });
-      return;
-    }
-
-    const responseData = await response.text();
-    logger.info("Response from destination:", responseData as any);
+    await client.fulfillFootprint(req.body.id, [footprintsV3[0]]);
+    logger.info(`Successfully sent RequestFulfilledEvent to ${source}`);
 
     // Return success response
     res.status(200).send();

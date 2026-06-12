@@ -74,7 +74,7 @@ export const getFootprints = (req: Request, res: Response) => {
       classifications.some(
         (classif) =>
           typeof classif === "string" &&
-          footprint.productClassifications.includes(classif)
+          (footprint.productClassifications ?? []).includes(classif)
       )
     );
   }
