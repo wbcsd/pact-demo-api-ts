@@ -1,5 +1,5 @@
-import { ProductFootprint } from "../models/v2/productFootprint";
-import { ProductFootprint as ProductFootprintV3 } from "../models/v3/productFootprint";
+import { ProductFootprint } from "@wbcsd/pact-data-model/v2_0";
+import { ProductFootprint as ProductFootprintV3 } from "@wbcsd/pact-data-model/v3_0";
 
 // Mock data for demonstration.
 // Cast is required because mock literals use plain strings while the package
