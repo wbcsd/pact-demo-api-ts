@@ -1,5 +1,6 @@
 import express from "express";
 import fs from "fs";
+import path from "path";
 import dotenv from "dotenv";
 import http from "http";
 import https from "https";
@@ -25,6 +26,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Logging middleware
 app.use(loggerMiddleware);
+
+// Serve dashboard UI
+app.use(express.static(path.join(__dirname, "../public")));
 
 // Auth routes
 app.post("/auth/token", getToken);

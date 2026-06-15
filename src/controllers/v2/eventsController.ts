@@ -65,100 +65,76 @@ export const createEvent = async (req: Request, res: Response) => {
       return;
     }
 
-    // Check if productId is ["urn:pact:null"] and send RequestRejectedEvent
-    if (
-      data.pf &&
-      data.pf.productIds &&
-      Array.isArray(data.pf.productIds) &&
-      data.pf.productIds.length === 1 &&
-      data.pf.productIds[0] === "urn:pact:null"
-    ) {
-      const rejectedPayload = {
-        type: EventTypes.RequestRejected,
-        specversion: "1.0",
-        id: randomUUID(),
-        source: `//EventHostname/EventSubpath`,
-        time: new Date().toISOString(),
-        data: {
-          requestEventId: req.body.id,
-          error: {
-            code: "NotFound",
-            message: "The requested footprint could not be found.",
-          },
-        },
-      };
-
-      const token = await getAccessToken(source);
-
-      const response = await fetch(`${source}/2/events`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(rejectedPayload),
-      });
-
-      if (!response.ok) {
-        logger.error(
-          `Failed to send rejected response to ${source}. Status: ${response.status}`
-        );
-      } else {
-        logger.info(
-          "Successfully sent RequestRejectedEvent for null productId"
-        );
-      }
-
+    // Only send callbacks for RequestCreated; acknowledge everything else immediately
+    if (type !== EventTypes.RequestCreated) {
       res.status(200).send();
       return;
     }
 
-    // Prepare the response payload using v2 event format
-    const responsePayload = {
-      type: EventTypes.RequestFulfilled,
-      specversion,
-      id: randomUUID(),
-      source: `//EventHostname/EventSubpath`,
-      time: new Date().toISOString(),
-      data: {
-        requestEventId: req.body.id,
-        pfs: [footprints[0]],
-      },
-    };
-
-    const token = await getAccessToken(source);
-
-    const response = await fetch(`${source}/2/events`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(responsePayload),
-    });
-
-    if (!response.ok) {
-      logger.error(
-        `Failed to send response to ${source}. Status: ${response.status}`
-      );
-      res.status(502).json({
-        error: `Failed to forward request to ${source}`,
-        status: response.status,
-      });
-      return;
-    }
-
-    const responseData = await response.text();
-    logger.info("Response from destination:", responseData as any);
-
-    // Return success response
+    // Acknowledge receipt immediately (PACT spec: 200 = received, callback is async)
     res.status(200).send();
+
+    // Fire-and-forget: send fulfillment or rejection back to source
+    void (async () => {
+      try {
+        const token = await getAccessToken(source);
+        const isNullRequest =
+          data.pf?.productIds?.length === 1 &&
+          data.pf.productIds[0] === "urn:pact:null";
+        const responsePayload = isNullRequest
+          ? {
+              type: EventTypes.RequestRejected,
+              specversion: "1.0",
+              id: randomUUID(),
+              source: `//EventHostname/EventSubpath`,
+              time: new Date().toISOString(),
+              data: {
+                requestEventId: req.body.id,
+                error: {
+                  code: "NotFound",
+                  message: "The requested footprint could not be found.",
+                },
+              },
+            }
+          : {
+              type: EventTypes.RequestFulfilled,
+              specversion,
+              id: randomUUID(),
+              source: `//EventHostname/EventSubpath`,
+              time: new Date().toISOString(),
+              data: {
+                requestEventId: req.body.id,
+                pfs: [footprints[0]],
+              },
+            };
+
+        const response = await fetch(`${source}/2/events`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(responsePayload),
+        });
+
+        if (!response.ok) {
+          logger.error(
+            `Failed to send callback to ${source}. Status: ${response.status}`
+          );
+        } else {
+          logger.info(
+            `Successfully sent ${isNullRequest ? "RequestRejectedEvent" : "RequestFulfilledEvent"} to ${source}`
+          );
+        }
+      } catch (err) {
+        logger.error(`Failed to send callback to ${source}:`, err);
+      }
+    })();
   } catch (error) {
     logger.error("Error processing webhook:", error);
     res.status(500).json({
       error: "Internal server error processing webhook",
       details: error instanceof Error ? error.message : String(error),
     });
-    return;
   }
 };
