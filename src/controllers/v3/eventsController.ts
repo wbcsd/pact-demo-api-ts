@@ -62,52 +62,43 @@ export const createEvent = async (req: Request, res: Response) => {
       return;
     }
 
-    // Check if productId is ["urn:pact:null"] and send RequestRejectedEvent
-    if (
-      data.productId &&
-      Array.isArray(data.productId) &&
-      data.productId.length === 1 &&
-      data.productId[0] === "urn:pact:null"
-    ) {
-      const client = new PactApiClient(
-        source,
-        "test_client_id",
-        "test_client_secret",
-        "//EventHostname/EventSubpath"
-      );
-
-      try {
-        await client.rejectFootprint(req.body.id, {
-          code: "NotFound",
-          message: "The requested footprint could not be found.",
-        });
-        logger.info("Successfully sent RequestRejectedEvent for null productId");
-      } catch (err) {
-        logger.error(`Failed to send rejected response to ${source}:`, err);
-      }
-
+    // Only send callbacks for RequestCreated; acknowledge everything else immediately
+    if (type !== EventTypes.RequestCreated) {
       res.status(200).send();
       return;
     }
 
-    const client = new PactApiClient(
-      source,
-      "test_client_id",
-      "test_client_secret",
-      "//EventHostname/EventSubpath"
-    );
-
-    await client.fulfillFootprint(req.body.id, [footprintsV3[0]]);
-    logger.info(`Successfully sent RequestFulfilledEvent to ${source}`);
-
-    // Return success response
+    // Acknowledge receipt immediately (PACT spec: 200 = received, callback is async)
     res.status(200).send();
+
+    // Fire-and-forget: send fulfillment or rejection back to source
+    void (async () => {
+      try {
+        const client = new PactApiClient(source, "test_client_id", "test_client_secret");
+        if (
+          data.productId &&
+          Array.isArray(data.productId) &&
+          data.productId.length === 1 &&
+          data.productId[0] === "urn:pact:null"
+        ) {
+          await client.rejectFootprint(req.body.id, {
+            code: "NotFound",
+            message: "The requested footprint could not be found.",
+          });
+          logger.info("Successfully sent RequestRejectedEvent for null productId");
+        } else {
+          await client.fulfillFootprint(req.body.id, [footprintsV3[0]]);
+          logger.info(`Successfully sent RequestFulfilledEvent to ${source}`);
+        }
+      } catch (err) {
+        logger.error(`Failed to send callback to ${source}:`, err);
+      }
+    })();
   } catch (error) {
     logger.error("Error processing webhook:", error);
     res.status(500).json({
       error: "Internal server error processing webhook",
       details: error instanceof Error ? error.message : String(error),
     });
-    return;
   }
 };

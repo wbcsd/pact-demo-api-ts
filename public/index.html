@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PACT Demo API</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:        #09094e;
+      --navy-light:  #13136a;
+      --teal:        #0eb87f;
+      --teal-hover:  #0da070;
+      --teal-dim:    #e6f9f3;
+      --bg:          #f4f5fb;
+      --white:       #ffffff;
+      --border:      #d9dff0;
+      --text:        #09094e;
+      --muted:       #6b7284;
+      --code-bg:     #0c0c44;
+      --code-text:   #7dd3b8;
+      --error:       #e53e3e;
+      --radius:      4px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* ── Nav ─────────────────────────────────────────────────── */
+    nav {
+      background: var(--white);
+      border-bottom: 1px solid #d9d9d9;
+      padding: 0 2.5rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--navy);
+      text-decoration: none;
+    }
+    .nav-brand-text {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -.01em;
+    }
+    .nav-brand-text em {
+      color: var(--teal);
+      font-style: normal;
+    }
+    .nav-right { display: flex; gap: 8px; align-items: center; }
+    .nav-github {
+      display: flex; align-items: center; gap: 5px;
+      color: var(--navy); text-decoration: none;
+      font-size: .82rem; font-weight: 600;
+      padding: 4px 10px; border: 1px solid var(--border);
+      border-radius: 4px; transition: background .15s;
+    }
+    .nav-github:hover { background: var(--bg); }
+    .chip {
+      font-family: 'Inter', sans-serif;
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .05em;
+      padding: 3px 9px;
+      border-radius: 2px;
+      border: 1px solid var(--navy);
+      color: var(--navy);
+    }
+    .chip.active { background: var(--navy); color: #fff; }
+
+    /* ── Hero ────────────────────────────────────────────────── */
+    .hero {
+      background: var(--navy);
+      padding: 5rem 2.5rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 80% 50%, rgba(78,119,255,.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: 860px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .hero-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 1.25rem;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 24px; height: 2px;
+      background: var(--teal);
+    }
+    .hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      line-height: 1.1;
+      color: #fff;
+      letter-spacing: -.02em;
+      margin-bottom: 1rem;
+    }
+    .hero h1 span { color: var(--teal); }
+    .hero p {
+      color: rgba(255,255,255,.6);
+      font-size: 1rem;
+      max-width: 500px;
+      margin-bottom: 2rem;
+    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: .7rem 1.5rem;
+      border-radius: var(--radius);
+      font-size: .9rem;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: background .15s, color .15s, border-color .15s, transform .1s;
+      text-decoration: none;
+      letter-spacing: .01em;
+    }
+    .btn:active { transform: scale(.97); }
+    .btn-primary   { background: var(--white); color: var(--navy); border-color: var(--white); }
+    .btn-primary:hover { background: #e8e8ff; }
+    .btn-outline   { background: transparent; color: #fff; border-color: rgba(255,255,255,.4); }
+    .btn-outline:hover { border-color: #fff; }
+    .btn-navy      { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .btn-navy:hover { background: var(--navy-light); }
+
+    /* ── Run button ──────────────────────────────────────────── */
+    .btn-run {
+      background: var(--navy);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      padding: .48rem 1.1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-run:hover    { background: var(--navy-light); }
+    .btn-run:disabled { opacity: .4; cursor: not-allowed; }
+    .btn-run.success  { background: var(--teal); }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    .page { max-width: 920px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+
+    /* ── Section headings ────────────────────────────────────── */
+    .section-label {
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: .3rem;
+    }
+    .section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      color: var(--navy);
+    }
+
+    /* ── Cards ───────────────────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .card-title {
+      font-size: .9rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .method-badge {
+      font-size: .68rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 2px;
+      letter-spacing: .04em;
+      font-family: 'Inter', sans-serif;
+    }
+    .badge-get  { background: #dbeafe; color: #1d4ed8; }
+    .badge-post { background: #dcfce7; color: #15803d; }
+    .endpoint-tag {
+      font-family: 'Courier New', monospace;
+      font-size: .75rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 2px 8px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    /* ── Auth ────────────────────────────────────────────────── */
+    .auth-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    @media(max-width:520px){ .auth-grid { grid-template-columns: 1fr; } }
+
+    .token-panel {
+      background: var(--code-bg);
+      border-radius: 4px;
+      padding: .9rem 1rem;
+      margin-top: 1rem;
+      display: none;
+    }
+    .token-panel.visible { display: block; }
+    .token-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: .5rem;
+    }
+    .token-panel-label {
+      font-size: .68rem;
+      font-weight: 700;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--teal);
+    }
+    .copy-btn {
+      background: rgba(14,184,127,.15);
+      border: 1px solid rgba(14,184,127,.3);
+      color: var(--teal);
+      border-radius: 2px;
+      font-size: .68rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+    }
+    .copy-btn:hover { background: rgba(14,184,127,.25); }
+    .token-value {
+      font-family: 'Courier New', monospace;
+      font-size: .73rem;
+      color: var(--code-text);
+      word-break: break-all;
+      line-height: 1.5;
+    }
+
+    /* ── Tab toggle ──────────────────────────────────────────── */
+    .tabs {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+    .tab {
+      padding: .4rem 1.1rem;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: var(--white);
+      color: var(--muted);
+      transition: all .15s;
+      font-family: 'Inter', sans-serif;
+    }
+    .tab:first-child { border-right: 1px solid var(--border); }
+    .tab.active { background: var(--navy); color: #fff; }
+
+    /* ── Form inputs ─────────────────────────────────────────── */
+    label {
+      font-size: .78rem;
+      font-weight: 500;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 4px;
+    }
+    input[type="text"],
+    input[type="password"],
+    select, textarea {
+      width: 100%;
+      padding: .5rem .75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-family: 'Inter', sans-serif;
+      font-size: .85rem;
+      color: var(--text);
+      background: #fff;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--navy);
+      box-shadow: 0 0 0 3px rgba(9,9,78,.08);
+    }
+    textarea { resize: vertical; font-family: 'Courier New', monospace; font-size: .8rem; }
+
+    /* ── Request row ─────────────────────────────────────────── */
+    .request-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+    .request-row .input-wrap { flex: 1; }
+    .filter-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .filter-toggle {
+      font-size: .78rem;
+      color: var(--muted);
+      cursor: pointer;
+      margin-bottom: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      user-select: none;
+    }
+    .filter-toggle:hover { color: var(--navy); }
+
+    /* ── Response panel ──────────────────────────────────────── */
+    .response-panel {
+      background: var(--code-bg);
+      border-radius: 4px;
+      margin-top: 1rem;
+      overflow: hidden;
+      display: none;
+    }
+    .response-panel.visible { display: block; }
+    .response-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .55rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .response-status {
+      font-size: .72rem;
+      font-weight: 700;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .status-ok  { color: var(--teal); }
+    .status-err { color: #fc8181; }
+    .response-time { font-size: .7rem; color: rgba(255,255,255,.3); }
+    .response-body {
+      padding: 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: .78rem;
+      color: var(--code-text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 320px;
+      overflow-y: auto;
+      line-height: 1.65;
+    }
+    .response-body::-webkit-scrollbar { width: 5px; }
+    .response-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.12); border-radius: 2px; }
+
+    /* ── Spinner ─────────────────────────────────────────────── */
+    .spinner {
+      display: none;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(9,9,78,.15);
+      border-top-color: var(--navy);
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+    }
+    .spinner.active { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Status dot ──────────────────────────────────────────── */
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      background: #d1d5db;
+      flex-shrink: 0;
+    }
+    .status-dot.ok  { background: var(--teal); }
+    .status-dot.err { background: var(--error); }
+
+    /* ── Section divider ─────────────────────────────────────── */
+    .section { margin-bottom: 3rem; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+    /* ── Inline run row ──────────────────────────────────────── */
+    .inline-run {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: .5rem;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    footer {
+      background: var(--navy);
+      color: rgba(255,255,255,.45);
+      text-align: center;
+      padding: 1.75rem 2rem;
+      font-size: .8rem;
+      font-family: 'Inter', sans-serif;
+    }
+    footer a { color: var(--teal); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    footer .footer-brand {
+      font-family: 'Sora', sans-serif;
+      font-weight: 700;
+      font-size: .9rem;
+      color: #fff;
+      display: block;
+      margin-bottom: .4rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Nav ──────────────────────────────────────────────────── -->
+<nav>
+  <a class="nav-brand" href="/">
+    <span class="nav-brand-text">PACT <em>Demo API</em></span>
+  </a>
+  <div class="nav-right">
+    <a class="nav-github" href="https://github.com/wbcsd/pact-demo-api-ts/" target="_blank" rel="noopener">
+      <svg height="20" viewBox="0 0 16 16" width="20" fill="currentColor" aria-label="GitHub repository"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+    <span class="chip" id="chip-v2">v2</span>
+    <span class="chip active" id="chip-v3">v3</span>
+  </div>
+</nav>
+
+<!-- ── Hero ─────────────────────────────────────────────────── -->
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">PACT Data Exchange Protocol</div>
+    <h1>Reference <span>Implementation</span></h1>
+    <p>Authenticate, browse product footprints, and send CloudEvents against this live PACT-conformant API.</p>
+    <div class="hero-actions">
+      <a href="#footprints" class="btn btn-outline">Browse Footprints ↓</a>
+      <button class="btn btn-primary" onclick="document.getElementById('clientId').focus()">Get Token →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Page ──────────────────────────────────────────────────── -->
+<div class="page">
+
+  <!-- ── Authentication ─────────────────────────────────────── -->
+  <div class="section">
+    <div class="section-label">Step 1</div>
+    <div class="section-title">Authentication</div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="method-badge badge-post">POST</span>
+        /auth/token
+        <span class="endpoint-tag">OAuth2 · Client Credentials</span>
+      </div>
+
+      <div class="auth-grid">
+        <div>
+          <label for="clientId">Client ID</label>
+          <input type="text" id="clientId" value="test_client_id" autocomplete="off" />
+        </div>
+        <div>
+          <label for="clientSecret">Client Secret</label>
+          <input type="password" id="clientSecret" value="test_client_secret" />
+        </div>
+      </div>
+
+      <div class="inline-run">
+        <button class="btn-run" onclick="getToken()">Get Token</button>
+        <span class="spinner" id="auth-spinner"></span>
+        <span class="status-dot" id="auth-dot"></span>
+        <span id="auth-msg" style="font-size:.8rem;color:var(--muted)"></span>
+      </div>
+
+      <div class="token-panel" id="token-panel">
+        <div class="token-panel-header">
+          <span class="token-panel-label">Bearer Token</span>
+          <button class="copy-btn" onclick="copyToken()">Copy</button>
+        </div>
+        <div class="token-value" id="token-value"></div>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- ── Footprints ─────────────────────────────────────────── -->
+  <div class="section" id="footprints">
+    <div class="section-label">Step 2</div>
+    <div class="section-title">Product Footprints</div>
+
+    <div class="tabs">
+      <button class="tab active" id="tab-v3" onclick="switchVersion('v3')">Version 3</button>
+      <button class="tab" id="tab-v2" onclick="switchVersion('v2')">Version 2</button>
+    </div>
+
+    <!-- List -->
+    <div class="card">
+      <div class="card-title">
+        <span class="method-badge badge-get">GET</span>
+        /<span id="list-ver">3</span>/footprints
+      </div>
+
+      <div id="v3-filters">
+        <div class="filter-toggle" onclick="toggleFilters()">
+          <span id="filter-arrow">▸</span> Filters (optional)
+        </div>
+        <div id="filter-fields" style="display:none">
+          <div class="filter-grid">
+            <div><label>productId</label><input type="text" id="f-productId" placeholder="urn:gtin:…" /></div>
+            <div><label>companyId</label><input type="text" id="f-companyId" placeholder="urn:uuid:…" /></div>
+            <div><label>geography</label><input type="text" id="f-geography" placeholder="Europe" /></div>
+            <div><label>limit</label><input type="text" id="f-limit" placeholder="10" /></div>
+            <div><label>offset</label><input type="text" id="f-offset" placeholder="0" /></div>
+            <div><label>validOn</label><input type="text" id="f-validOn" placeholder="2024-01-01" /></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="inline-run">
+        <button class="btn-run" onclick="listFootprints()">Run</button>
+        <span class="spinner" id="list-spinner"></span>
+      </div>
+
+      <div class="response-panel" id="list-response">
+        <div class="response-header">
+          <span class="response-status" id="list-status"></span>
+          <span class="response-time"  id="list-time"></span>
+        </div>
+        <div class="response-body" id="list-body"></div>
+      </div>
+    </div>
+
+    <!-- Get by ID -->
+    <div class="card">
+      <div class="card-title">
+        <span class="method-badge badge-get">GET</span>
+        /<span id="get-ver">3</span>/footprints/:id
+      </div>
+
+      <div class="request-row">
+        <div class="input-wrap">
+          <label for="fp-id">Footprint ID</label>
+          <input type="text" id="fp-id" placeholder="b1f8c0d2-7c4e-4e67-9a9c-2e4c12345678" />
+        </div>
+        <button class="btn-run" onclick="getFootprint()">Run</button>
+        <span class="spinner" id="get-spinner"></span>
+      </div>
+
+      <div class="response-panel" id="get-response">
+        <div class="response-header">
+          <span class="response-status" id="get-status"></span>
+          <span class="response-time"  id="get-time"></span>
+        </div>
+        <div class="response-body" id="get-body"></div>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- ── Events ─────────────────────────────────────────────── -->
+  <div class="section" id="events">
+    <div class="section-label">Step 3</div>
+    <div class="section-title">Events</div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="method-badge badge-post">POST</span>
+        /<span id="evt-ver">3</span>/events
+        <span class="endpoint-tag">CloudEvents 1.0</span>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label for="event-type">Event Type</label>
+        <select id="event-type" onchange="updateEventPayload()">
+          <optgroup label="Version 3">
+            <option value="v3-request">RequestCreatedEvent (v3)</option>
+            <option value="v3-published">PublishedEvent (v3)</option>
+          </optgroup>
+          <optgroup label="Version 2">
+            <option value="v2-request">RequestCreatedEvent (v2)</option>
+            <option value="v2-published">PublishedEvent (v2)</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label for="evt-source">Source URL (your node's base URL)</label>
+        <input type="text" id="evt-source" placeholder="https://your-node.example.com/pact" />
+      </div>
+
+      <div style="margin-bottom:12px">
+        <label for="evt-payload">Payload</label>
+        <textarea id="evt-payload" rows="10"></textarea>
+      </div>
+
+      <div class="inline-run">
+        <button class="btn-run" onclick="sendEvent()">Send Event</button>
+        <span class="spinner" id="evt-spinner"></span>
+      </div>
+
+      <div class="response-panel" id="evt-response">
+        <div class="response-header">
+          <span class="response-status" id="evt-status"></span>
+          <span class="response-time"  id="evt-time"></span>
+        </div>
+        <div class="response-body" id="evt-body"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Footer ────────────────────────────────────────────────── -->
+<footer>
+  <span class="footer-brand">PACT Demo API</span>
+  Powered by <a href="https://www.carbon-transparency.org" target="_blank">WBCSD PACT</a>
+  &nbsp;·&nbsp;
+  <a href="https://docs.carbon-transparency.org/data-exchange-protocol/" target="_blank">Spec Docs</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/wbcsd/pact-openapi" target="_blank">OpenAPI</a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/wbcsd/pact-demo-api-ts/" target="_blank">GitHub</a>
+</footer>
+
+<script>
+  /* ── State ─────────────────────────────────────────────────── */
+  let token = null;
+  let currentVersion = 'v3';
+
+  /* ── Event payload templates ───────────────────────────────── */
+  const PAYLOADS = {
+    'v3-request': () => ({
+      type: 'org.wbcsd.pact.ProductFootprint.RequestCreatedEvent.3',
+      specversion: '1.0', id: uuid(), source: sourceVal(), time: now(),
+      data: { productId: ['urn:gtin:1234567890123'], comment: 'Requesting PCF for Q1 2024' }
+    }),
+    'v3-published': () => ({
+      type: 'org.wbcsd.pact.ProductFootprint.PublishedEvent.3',
+      specversion: '1.0', id: uuid(), source: sourceVal(), time: now(),
+      data: { pfIds: ['b1f8c0d2-7c4e-4e67-9a9c-2e4c12345678'] }
+    }),
+    'v2-request': () => ({
+      type: 'org.wbcsd.pathfinder.ProductFootprintRequest.Created.v1',
+      specversion: '1.0', id: uuid(), source: sourceVal(), time: now(),
+      data: { pf: { productIds: ['urn:gtin:1234567890123'] }, comment: 'Requesting PCF' }
+    }),
+    'v2-published': () => ({
+      type: 'org.wbcsd.pathfinder.ProductFootprint.Published.v1',
+      specversion: '1.0', id: uuid(), source: sourceVal(), time: now(),
+      data: { pfIds: ['b1f8c0d2-7c4e-4e67-9a9c-2e4c12345678'] }
+    })
+  };
+
+  /* ── Helpers ───────────────────────────────────────────────── */
+  function uuid() {
+    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+      (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+  }
+  function now()       { return new Date().toISOString(); }
+  function sourceVal() { return document.getElementById('evt-source').value.trim() || window.location.origin; }
+  function spin(id, on){ document.getElementById(id).classList.toggle('active', on); }
+
+  function showResponse(panelId, statusId, timeId, bodyId, status, ms, data) {
+    const panel = document.getElementById(panelId);
+    const statEl = document.getElementById(statusId);
+    const timeEl = document.getElementById(timeId);
+    const bodyEl = document.getElementById(bodyId);
+    panel.classList.add('visible');
+    const ok = status >= 200 && status < 300;
+    statEl.textContent = `${status} ${ok ? '✓' : '✗'}`;
+    statEl.className = `response-status ${ok ? 'status-ok' : 'status-err'}`;
+    timeEl.textContent = `${ms}ms`;
+    bodyEl.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+  }
+
+  /* ── Auth ──────────────────────────────────────────────────── */
+  async function getToken() {
+    const id  = document.getElementById('clientId').value.trim();
+    const sec = document.getElementById('clientSecret').value.trim();
+    const dot = document.getElementById('auth-dot');
+    const msg = document.getElementById('auth-msg');
+
+    spin('auth-spinner', true);
+    dot.className = 'status-dot';
+    msg.textContent = 'Authenticating…';
+
+    // The controller uses HTTP Basic Auth + grant_type in form body
+    const encoded = btoa(`${id}:${sec}`);
+    const t0 = Date.now();
+    try {
+      const res = await fetch('/auth/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Authorization': `Basic ${encoded}`
+        },
+        body: new URLSearchParams({ grant_type: 'client_credentials' })
+      });
+      const ms   = Date.now() - t0;
+      const json = await res.json();
+
+      if (res.ok && json.access_token) {
+        token = json.access_token;
+        dot.className = 'status-dot ok';
+        msg.textContent = `Token acquired (${ms}ms)`;
+        document.getElementById('token-value').textContent = token;
+        document.getElementById('token-panel').classList.add('visible');
+      } else {
+        throw new Error(json.error || json.message || res.statusText);
+      }
+    } catch (e) {
+      dot.className = 'status-dot err';
+      msg.textContent = `Error: ${e.message}`;
+    } finally {
+      spin('auth-spinner', false);
+    }
+  }
+
+  function copyToken() {
+    if (!token) return;
+    navigator.clipboard.writeText(token).then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+    });
+  }
+
+  /* ── Version toggle ────────────────────────────────────────── */
+  function switchVersion(v) {
+    currentVersion = v;
+    document.getElementById('tab-v3').classList.toggle('active', v === 'v3');
+    document.getElementById('tab-v2').classList.toggle('active', v === 'v2');
+    document.getElementById('chip-v3').classList.toggle('active', v === 'v3');
+    document.getElementById('chip-v2').classList.toggle('active', v === 'v2');
+    const vn = v === 'v3' ? '3' : '2';
+    document.getElementById('list-ver').textContent = vn;
+    document.getElementById('get-ver').textContent  = vn;
+    document.getElementById('v3-filters').style.display = v === 'v3' ? 'block' : 'none';
+    const sel = document.getElementById('event-type');
+    if (v === 'v2' && sel.value.startsWith('v3')) sel.value = 'v2-request';
+    if (v === 'v3' && sel.value.startsWith('v2')) sel.value = 'v3-request';
+    updateEventPayload();
+  }
+
+  /* ── Filter toggle ─────────────────────────────────────────── */
+  function toggleFilters() {
+    const fields = document.getElementById('filter-fields');
+    const arrow  = document.getElementById('filter-arrow');
+    const open   = fields.style.display === 'block';
+    fields.style.display = open ? 'none' : 'block';
+    arrow.textContent    = open ? '▸' : '▾';
+  }
+
+  /* ── List footprints ───────────────────────────────────────── */
+  async function listFootprints() {
+    if (!token) { alert('Get a token first.'); return; }
+    const vn = currentVersion === 'v3' ? '3' : '2';
+    let url = `/${vn}/footprints`;
+    if (currentVersion === 'v3') {
+      const p = new URLSearchParams();
+      const add = (id, key) => { const v = document.getElementById(id).value.trim(); if (v) p.append(key, v); };
+      add('f-productId','productId'); add('f-companyId','companyId');
+      add('f-geography','geography'); add('f-limit','limit');
+      add('f-offset','offset');       add('f-validOn','validOn');
+      if (p.toString()) url += '?' + p.toString();
+    }
+    spin('list-spinner', true);
+    const t0 = Date.now();
+    try {
+      const res  = await fetch(url, { headers: { 'Authorization': `Bearer ${token}` } });
+      const ms   = Date.now() - t0;
+      const data = await res.json();
+      showResponse('list-response','list-status','list-time','list-body', res.status, ms, data);
+    } catch (e) {
+      showResponse('list-response','list-status','list-time','list-body', 0, 0, `Network error: ${e.message}`);
+    } finally {
+      spin('list-spinner', false);
+    }
+  }
+
+  /* ── Get footprint by ID ───────────────────────────────────── */
+  async function getFootprint() {
+    if (!token) { alert('Get a token first.'); return; }
+    const id = document.getElementById('fp-id').value.trim();
+    if (!id) { alert('Enter a footprint ID.'); return; }
+    const vn = currentVersion === 'v3' ? '3' : '2';
+    spin('get-spinner', true);
+    const t0 = Date.now();
+    try {
+      const res  = await fetch(`/${vn}/footprints/${encodeURIComponent(id)}`, { headers: { 'Authorization': `Bearer ${token}` } });
+      const ms   = Date.now() - t0;
+      const data = await res.json();
+      showResponse('get-response','get-status','get-time','get-body', res.status, ms, data);
+    } catch (e) {
+      showResponse('get-response','get-status','get-time','get-body', 0, 0, `Network error: ${e.message}`);
+    } finally {
+      spin('get-spinner', false);
+    }
+  }
+
+  /* ── Events ────────────────────────────────────────────────── */
+  function updateEventPayload() {
+    const key = document.getElementById('event-type').value;
+    document.getElementById('evt-ver').textContent = key.startsWith('v3') ? '3' : '2';
+    document.getElementById('evt-payload').value = JSON.stringify(PAYLOADS[key](), null, 2);
+  }
+
+  async function sendEvent() {
+    if (!token) { alert('Get a token first.'); return; }
+    const key = document.getElementById('event-type').value;
+    const vn  = key.startsWith('v3') ? '3' : '2';
+    let body;
+    try { body = JSON.parse(document.getElementById('evt-payload').value); }
+    catch { alert('Invalid JSON in payload.'); return; }
+    spin('evt-spinner', true);
+    const t0 = Date.now();
+    try {
+      const res = await fetch(`/${vn}/events`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/cloudevents+json' },
+        body: JSON.stringify(body)
+      });
+      const ms = Date.now() - t0;
+      let data;
+      try { data = await res.json(); } catch { data = `${res.status} ${res.statusText}`; }
+      showResponse('evt-response','evt-status','evt-time','evt-body', res.status, ms, data);
+    } catch (e) {
+      showResponse('evt-response','evt-status','evt-time','evt-body', 0, 0, `Network error: ${e.message}`);
+    } finally {
+      spin('evt-spinner', false);
+    }
+  }
+
+  /* ── Init ──────────────────────────────────────────────────── */
+  document.getElementById('evt-source').value = window.location.origin;
+  updateEventPayload();
+</script>
+</body>
+</html>
