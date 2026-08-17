@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import { PactApiClient } from "@wbcsd/pact-api-client";
 import { EventTypes, schema, validate } from "@wbcsd/pact-data-model/v3_0";
-import { footprintsV3 } from "../../utils/footprints";
+import { enqueueRequest } from "../../utils/requestQueue";
 import logger from "../../utils/logger";
 
 export const createEvent = async (req: Request, res: Response) => {
@@ -71,29 +70,18 @@ export const createEvent = async (req: Request, res: Response) => {
     // Acknowledge receipt immediately (PACT spec: 200 = received, callback is async)
     res.status(200).send();
 
-    // Fire-and-forget: send fulfillment or rejection back to source
-    void (async () => {
-      try {
-        const client = new PactApiClient(source, "test_client_id", "test_client_secret");
-        if (
-          data.productId &&
-          Array.isArray(data.productId) &&
-          data.productId.length === 1 &&
-          data.productId[0] === "urn:pact:null"
-        ) {
-          await client.rejectFootprint(req.body.id, {
-            code: "NotFound",
-            message: "The requested footprint could not be found.",
-          });
-          logger.info("Successfully sent RequestRejectedEvent for null productId");
-        } else {
-          await client.fulfillFootprint(req.body.id, [footprintsV3[0]]);
-          logger.info(`Successfully sent RequestFulfilledEvent to ${source}`);
-        }
-      } catch (err) {
-        logger.error(`Failed to send callback to ${source}:`, err);
-      }
-    })();
+    // Queue the request for manual review and fulfillment via the dashboard.
+    // The callback requires credentials valid for the *source* node, which the
+    // operator supplies when fulfilling/rejecting the request.
+    const productIds = Array.isArray(data.productId) ? data.productId : [];
+    enqueueRequest({
+      requestEventId: req.body.id,
+      version: "v3",
+      source,
+      productIds,
+      comment: typeof data.comment === "string" ? data.comment : undefined,
+    });
+    logger.info(`Queued RequestCreatedEvent ${req.body.id} from ${source}`);
   } catch (error) {
     logger.error("Error processing webhook:", error);
     res.status(500).json({

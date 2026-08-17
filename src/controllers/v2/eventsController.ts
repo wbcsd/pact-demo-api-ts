@@ -1,10 +1,8 @@
 import { Request, Response } from "express";
-import { randomUUID } from "crypto";
 import { EventTypes } from "@wbcsd/pact-data-model/v2_0";
 import { schema } from "@wbcsd/pact-data-model/v2_0/schema";
 import { validate } from "@wbcsd/pact-data-model/common";
-import { footprints } from "../../utils/footprints";
-import { getAccessToken } from "../../utils/auth";
+import { enqueueRequest } from "../../utils/requestQueue";
 import logger from "../../utils/logger";
 
 export const createEvent = async (req: Request, res: Response) => {
@@ -74,62 +72,18 @@ export const createEvent = async (req: Request, res: Response) => {
     // Acknowledge receipt immediately (PACT spec: 200 = received, callback is async)
     res.status(200).send();
 
-    // Fire-and-forget: send fulfillment or rejection back to source
-    void (async () => {
-      try {
-        const token = await getAccessToken(source);
-        const isNullRequest =
-          data.pf?.productIds?.length === 1 &&
-          data.pf.productIds[0] === "urn:pact:null";
-        const responsePayload = isNullRequest
-          ? {
-              type: EventTypes.RequestRejected,
-              specversion: "1.0",
-              id: randomUUID(),
-              source: `//EventHostname/EventSubpath`,
-              time: new Date().toISOString(),
-              data: {
-                requestEventId: req.body.id,
-                error: {
-                  code: "NotFound",
-                  message: "The requested footprint could not be found.",
-                },
-              },
-            }
-          : {
-              type: EventTypes.RequestFulfilled,
-              specversion,
-              id: randomUUID(),
-              source: `//EventHostname/EventSubpath`,
-              time: new Date().toISOString(),
-              data: {
-                requestEventId: req.body.id,
-                pfs: [footprints[0]],
-              },
-            };
-
-        const response = await fetch(`${source}/2/events`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(responsePayload),
-        });
-
-        if (!response.ok) {
-          logger.error(
-            `Failed to send callback to ${source}. Status: ${response.status}`
-          );
-        } else {
-          logger.info(
-            `Successfully sent ${isNullRequest ? "RequestRejectedEvent" : "RequestFulfilledEvent"} to ${source}`
-          );
-        }
-      } catch (err) {
-        logger.error(`Failed to send callback to ${source}:`, err);
-      }
-    })();
+    // Queue the request for manual review and fulfillment via the dashboard.
+    // The callback requires credentials valid for the *source* node, which the
+    // operator supplies when fulfilling/rejecting the request.
+    const productIds = Array.isArray(data.pf?.productIds) ? data.pf.productIds : [];
+    enqueueRequest({
+      requestEventId: req.body.id,
+      version: "v2",
+      source,
+      productIds,
+      comment: typeof data.comment === "string" ? data.comment : undefined,
+    });
+    logger.info(`Queued RequestCreatedEvent ${req.body.id} from ${source}`);
   } catch (error) {
     logger.error("Error processing webhook:", error);
     res.status(500).json({
