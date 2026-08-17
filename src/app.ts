@@ -8,6 +8,7 @@ import { getToken } from "./controllers/authController";
 import { authenticate } from "./middlewares/authMiddleware";
 import * as v2 from "./controllers/v2";
 import * as v3 from "./controllers/v3";
+import * as admin from "./controllers/adminController";
 import logger, { loggerMiddleware } from "./utils/logger";
 
 // Load environment variables from .env file
@@ -42,6 +43,11 @@ app.post("/2/events", authenticate, v2.events.createEvent);
 app.get("/3/footprints", authenticate, v3.footprints.getFootprints);
 app.get("/3/footprints/:id", authenticate, v3.footprints.getFootprintById);
 app.post("/3/events", authenticate, v3.events.createEvent);
+
+// Admin routes — inbound request queue management (dashboard)
+app.get("/admin/requests", authenticate, admin.getRequests);
+app.post("/admin/requests/:id/fulfill", authenticate, admin.fulfillRequest);
+app.post("/admin/requests/:id/reject", authenticate, admin.rejectRequest);
 
 // Define health check route
 app.get("/health-check", (_, res) => {

@@ -455,6 +455,95 @@
       display: block;
       margin-bottom: .4rem;
     }
+
+    /* ── Request queue ───────────────────────────────────────── */
+    .req-item {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: .85rem;
+      background: var(--bg);
+    }
+    .req-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: .6rem;
+    }
+    .req-source {
+      font-family: 'Courier New', monospace;
+      font-size: .8rem;
+      color: var(--navy);
+      word-break: break-all;
+    }
+    .req-meta {
+      font-size: .74rem;
+      color: var(--muted);
+      margin-bottom: .75rem;
+      line-height: 1.5;
+    }
+    .req-meta code {
+      font-family: 'Courier New', monospace;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 1px 5px;
+    }
+    .req-status {
+      font-size: .66rem;
+      font-weight: 700;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 2px;
+    }
+    .req-status.pending   { background: #fef3c7; color: #92400e; }
+    .req-status.fulfilled { background: #dcfce7; color: #15803d; }
+    .req-status.rejected  { background: #e5e7eb; color: #374151; }
+    .req-status.failed    { background: #fee2e2; color: #b91c1c; }
+    .ver-badge {
+      font-size: .66rem;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 2px;
+      background: var(--navy);
+      color: #fff;
+    }
+    .req-creds {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto auto;
+      gap: 8px;
+      align-items: end;
+    }
+    @media(max-width:620px){ .req-creds { grid-template-columns: 1fr 1fr; } }
+    .req-error {
+      font-size: .74rem;
+      color: var(--error);
+      margin-top: .6rem;
+      word-break: break-word;
+    }
+    .req-empty {
+      font-size: .84rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 1.5rem;
+    }
+    .btn-reject {
+      background: #fff;
+      color: var(--error);
+      border: 1.5px solid var(--error);
+      border-radius: var(--radius);
+      padding: .48rem 1.1rem;
+      font-family: 'Inter', sans-serif;
+      font-size: .82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+    }
+    .btn-reject:hover    { background: #fee2e2; }
+    .btn-reject:disabled { opacity: .4; cursor: not-allowed; }
   </style>
 </head>
 <body>
@@ -658,7 +747,44 @@
     </div>
   </div>
 
+  <hr />
+
+  <!-- ── Pending Requests Queue ─────────────────────────────── -->
+  <div class="section" id="requests">
+    <div class="section-label" style="color:var(--muted)">Demo Utility · Not part of the PACT API</div>
+    <div class="section-title">Pending Requests</div>
+
+    <div class="card">
+      <div class="card-title">
+        <span class="method-badge badge-get">GET</span>
+        /admin/requests
+        <span class="endpoint-tag">Inbound callback queue</span>
+      </div>
+
+      <p style="font-size:.82rem;color:var(--muted);margin-bottom:1rem">
+        <strong>This section is a helper for this demo server only — it is not
+        defined by the PACT Data Exchange Protocol.</strong> The PACT spec sends
+        request callbacks automatically; here we instead queue incoming requests
+        so you can respond manually. To respond, enter credentials valid for the
+        <strong>requesting node</strong> and choose Fulfill or Reject — the
+        callback is sent using those credentials.
+      </p>
+
+      <div class="inline-run" style="margin-bottom:1rem">
+        <button class="btn-run" onclick="loadRequests()">Refresh</button>
+        <span class="spinner" id="req-spinner"></span>
+        <label style="display:inline-flex;align-items:center;gap:6px;margin:0;cursor:pointer">
+          <input type="checkbox" id="req-autorefresh" style="width:auto" checked onchange="toggleAutoRefresh()" />
+          Auto-refresh
+        </label>
+      </div>
+
+      <div id="req-list"></div>
+    </div>
+  </div>
+
 </div>
+
 
 <!-- ── Footer ────────────────────────────────────────────────── -->
 <footer>
@@ -755,6 +881,7 @@
         msg.textContent = `Token acquired (${ms}ms)`;
         document.getElementById('token-value').textContent = token;
         document.getElementById('token-panel').classList.add('visible');
+        loadRequests();
       } else {
         throw new Error(json.error || json.message || res.statusText);
       }
@@ -881,9 +1008,106 @@
     }
   }
 
+  /* ── Pending Requests Queue ────────────────────────────────── */
+  let reqTimer = null;
+
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+      ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+  }
+
+  async function loadRequests() {
+    if (!token) {
+      document.getElementById('req-list').innerHTML =
+        '<div class="req-empty">Get a token first to view the request queue.</div>';
+      return;
+    }
+    spin('req-spinner', true);
+    try {
+      const res = await fetch('/admin/requests', { headers: { 'Authorization': `Bearer ${token}` } });
+      const json = await res.json();
+      renderRequests(json.data || []);
+    } catch (e) {
+      document.getElementById('req-list').innerHTML =
+        `<div class="req-empty">Failed to load requests: ${esc(e.message)}</div>`;
+    } finally {
+      spin('req-spinner', false);
+    }
+  }
+
+  function renderRequests(items) {
+    const list = document.getElementById('req-list');
+    if (!items.length) {
+      list.innerHTML = '<div class="req-empty">No requests received yet.</div>';
+      return;
+    }
+    list.innerHTML = items.map(r => {
+      const pending = r.status === 'pending' || r.status === 'failed';
+      const disabled = pending ? '' : 'disabled';
+      const products = (r.productIds || []).map(p => `<code>${esc(p)}</code>`).join(' ') || '—';
+      return `
+        <div class="req-item">
+          <div class="req-head">
+            <span class="ver-badge">${esc(r.version)}</span>
+            <span class="req-status ${esc(r.status)}">${esc(r.status)}</span>
+            <span class="req-source">${esc(r.source)}</span>
+          </div>
+          <div class="req-meta">
+            Request ID: <code>${esc(r.requestEventId)}</code><br />
+            Products: ${products}<br />
+            ${r.comment ? 'Comment: ' + esc(r.comment) + '<br />' : ''}
+            Received: ${esc(new Date(r.receivedAt).toLocaleString())}
+          </div>
+          <div class="req-creds">
+            <div>
+              <label>Client ID</label>
+              <input type="text" id="cid-${esc(r.queueId)}" placeholder="client id for source node" ${disabled} />
+            </div>
+            <div>
+              <label>Client Secret</label>
+              <input type="password" id="csec-${esc(r.queueId)}" placeholder="client secret" ${disabled} />
+            </div>
+            <button class="btn-run" onclick="respondRequest('${esc(r.queueId)}','fulfill')" ${disabled}>Fulfill</button>
+            <button class="btn-reject" onclick="respondRequest('${esc(r.queueId)}','reject')" ${disabled}>Reject</button>
+          </div>
+          ${r.error ? `<div class="req-error">Last error: ${esc(r.error)}</div>` : ''}
+        </div>`;
+    }).join('');
+  }
+
+  async function respondRequest(queueId, kind) {
+    if (!token) { alert('Get a token first.'); return; }
+    const clientId = document.getElementById(`cid-${queueId}`).value.trim();
+    const clientSecret = document.getElementById(`csec-${queueId}`).value.trim();
+    if (!clientId || !clientSecret) { alert('Enter client ID and secret.'); return; }
+    try {
+      const res = await fetch(`/admin/requests/${encodeURIComponent(queueId)}/${kind}`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId, clientSecret })
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) alert(`${kind} failed: ${json.message || res.statusText}`);
+    } catch (e) {
+      alert(`Network error: ${e.message}`);
+    } finally {
+      loadRequests();
+    }
+  }
+
+  function toggleAutoRefresh() {
+    const on = document.getElementById('req-autorefresh').checked;
+    if (on) {
+      reqTimer = setInterval(() => { if (token) loadRequests(); }, 5000);
+    } else if (reqTimer) {
+      clearInterval(reqTimer);
+      reqTimer = null;
+    }
+  }
+
   /* ── Init ──────────────────────────────────────────────────── */
   document.getElementById('evt-source').value = window.location.origin;
   updateEventPayload();
-</script>
+  toggleAutoRefresh();</script>
 </body>
 </html>
