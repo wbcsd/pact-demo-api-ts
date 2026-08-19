@@ -502,6 +502,18 @@
     .req-status.fulfilled { background: #dcfce7; color: #15803d; }
     .req-status.rejected  { background: #e5e7eb; color: #374151; }
     .req-status.failed    { background: #fee2e2; color: #b91c1c; }
+    .req-remove {
+      margin-left: auto;
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1.15rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px;
+      transition: color .15s;
+    }
+    .req-remove:hover { color: var(--error); }
     .ver-badge {
       font-size: .66rem;
       font-weight: 700;
@@ -772,6 +784,7 @@
 
       <div class="inline-run" style="margin-bottom:1rem">
         <button class="btn-run" onclick="loadRequests()">Refresh</button>
+        <button class="btn-reject" onclick="clearRequests()">Clear all</button>
         <span class="spinner" id="req-spinner"></span>
         <label style="display:inline-flex;align-items:center;gap:6px;margin:0;cursor:pointer">
           <input type="checkbox" id="req-autorefresh" style="width:auto" checked onchange="toggleAutoRefresh()" />
@@ -1051,6 +1064,7 @@
             <span class="ver-badge">${esc(r.version)}</span>
             <span class="req-status ${esc(r.status)}">${esc(r.status)}</span>
             <span class="req-source">${esc(r.source)}</span>
+            <button class="req-remove" title="Remove from queue" onclick="removeRequest('${esc(r.queueId)}')">&times;</button>
           </div>
           <div class="req-meta">
             Request ID: <code>${esc(r.requestEventId)}</code><br />
@@ -1088,6 +1102,43 @@
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) alert(`${kind} failed: ${json.message || res.statusText}`);
+    } catch (e) {
+      alert(`Network error: ${e.message}`);
+    } finally {
+      loadRequests();
+    }
+  }
+
+  async function removeRequest(queueId) {
+    if (!token) { alert('Get a token first.'); return; }
+    try {
+      const res = await fetch(`/admin/requests/${encodeURIComponent(queueId)}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok && res.status !== 204) {
+        const json = await res.json().catch(() => ({}));
+        alert(`Remove failed: ${json.message || res.statusText}`);
+      }
+    } catch (e) {
+      alert(`Network error: ${e.message}`);
+    } finally {
+      loadRequests();
+    }
+  }
+
+  async function clearRequests() {
+    if (!token) { alert('Get a token first.'); return; }
+    if (!confirm('Clear all requests from the queue?')) return;
+    try {
+      const res = await fetch('/admin/requests', {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        alert(`Clear failed: ${json.message || res.statusText}`);
+      }
     } catch (e) {
       alert(`Network error: ${e.message}`);
     } finally {

@@ -46,8 +46,10 @@ app.post("/3/events", authenticate, v3.events.createEvent);
 
 // Admin routes — inbound request queue management (dashboard)
 app.get("/admin/requests", authenticate, admin.getRequests);
+app.delete("/admin/requests", authenticate, admin.clearRequestQueue);
 app.post("/admin/requests/:id/fulfill", authenticate, admin.fulfillRequest);
 app.post("/admin/requests/:id/reject", authenticate, admin.rejectRequest);
+app.delete("/admin/requests/:id", authenticate, admin.deleteRequest);
 
 // Define health check route
 app.get("/health-check", (_, res) => {
