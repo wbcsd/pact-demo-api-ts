@@ -5,8 +5,10 @@ import { EventTypes } from "@wbcsd/pact-data-model/v2_0";
 import { footprints, footprintsV3 } from "../utils/footprints";
 import { getAccessToken } from "../utils/auth";
 import {
+  clearRequests,
   getRequest,
   listRequests,
+  removeRequest,
   updateRequest,
 } from "../utils/requestQueue";
 import logger from "../utils/logger";
@@ -14,6 +16,27 @@ import logger from "../utils/logger";
 // Return the queue of received requests for the dashboard.
 export const getRequests = (_req: Request, res: Response) => {
   res.status(200).json({ data: listRequests() });
+};
+
+// Empty the queue. Pass ?resolvedOnly=true to keep pending/failed entries.
+export const clearRequestQueue = (req: Request, res: Response) => {
+  const resolvedOnly = req.query.resolvedOnly === "true";
+  const removed = clearRequests(resolvedOnly);
+  logger.info(`Cleared ${removed} request(s) from the queue`);
+  res.status(200).json({ removed });
+};
+
+// Remove a single request from the queue.
+export const deleteRequest = (req: Request, res: Response) => {
+  const { id } = req.params;
+  if (!removeRequest(id)) {
+    res.status(404).json({
+      code: "NotFound",
+      message: `Request with id ${id} not found.`,
+    });
+    return;
+  }
+  res.status(204).send();
 };
 
 // Send a RequestFulfilled / RequestRejected callback to a v2 source node,

@@ -65,3 +65,21 @@ export const updateRequest = (
   Object.assign(entry, patch);
   return entry;
 };
+
+export const removeRequest = (queueId: string): boolean => {
+  const index = queue.findIndex((r) => r.queueId === queueId);
+  if (index === -1) return false;
+  queue.splice(index, 1);
+  return true;
+};
+
+// Clears the queue. When `resolvedOnly` is true, keeps pending/failed entries.
+export const clearRequests = (resolvedOnly = false): number => {
+  const before = queue.length;
+  const kept = resolvedOnly
+    ? queue.filter((r) => r.status === "pending" || r.status === "failed")
+    : [];
+  queue.length = 0;
+  queue.push(...kept);
+  return before - queue.length;
+};
